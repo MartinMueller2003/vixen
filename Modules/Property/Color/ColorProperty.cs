@@ -38,6 +38,7 @@ namespace VixenModules.Property.Color
 		public override void SetDefaultValues()
 		{
 			_data.ElementColorType = ElementColorType.FullColor;
+			_data.ColorSetName = "RGB";
 		}
 
 		public override void CloneValues(IProperty sourceProperty)

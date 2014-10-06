@@ -36,15 +36,15 @@
 			this.comboBoxNewItemType = new System.Windows.Forms.ComboBox();
 			this.buttonAddTemplate = new System.Windows.Forms.Button();
 			this.groupBoxSelectedItems = new System.Windows.Forms.GroupBox();
-			this.buttonConfigureProperty = new System.Windows.Forms.Button();
+//			this.buttonConfigureProperty = new System.Windows.Forms.Button();
 			this.buttonRemoveProperty = new System.Windows.Forms.Button();
-			this.buttonAddProperty = new System.Windows.Forms.Button();
+//			this.buttonAddProperty = new System.Windows.Forms.Button();
 			this.label3 = new System.Windows.Forms.Label();
 			this.listViewProperties = new System.Windows.Forms.ListView();
 			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.buttonRunHelperSetup = new System.Windows.Forms.Button();
 			this.comboBoxSetupHelperType = new System.Windows.Forms.ComboBox();
-			this.label2 = new System.Windows.Forms.Label();
+			this.labelAddProperties = new System.Windows.Forms.Label();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.buttonSelectDestinationOutputs = new System.Windows.Forms.Button();
 			this.buttonDeleteElements = new System.Windows.Forms.Button();
@@ -91,20 +91,21 @@
 			// 
 			this.groupBoxSelectedItems.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.groupBoxSelectedItems.Controls.Add(this.buttonConfigureProperty);
+//			this.groupBoxSelectedItems.Controls.Add(this.buttonConfigureProperty);
 			this.groupBoxSelectedItems.Controls.Add(this.buttonRemoveProperty);
-			this.groupBoxSelectedItems.Controls.Add(this.buttonAddProperty);
+//			this.groupBoxSelectedItems.Controls.Add(this.buttonAddProperty);
 			this.groupBoxSelectedItems.Controls.Add(this.label3);
 			this.groupBoxSelectedItems.Controls.Add(this.listViewProperties);
 			this.groupBoxSelectedItems.Controls.Add(this.buttonRunHelperSetup);
 			this.groupBoxSelectedItems.Controls.Add(this.comboBoxSetupHelperType);
-			this.groupBoxSelectedItems.Controls.Add(this.label2);
+			this.groupBoxSelectedItems.Controls.Add(this.labelAddProperties);
 			this.groupBoxSelectedItems.Location = new System.Drawing.Point(3, 387);
 			this.groupBoxSelectedItems.Name = "groupBoxSelectedItems";
 			this.groupBoxSelectedItems.Size = new System.Drawing.Size(244, 159);
 			this.groupBoxSelectedItems.TabIndex = 33;
 			this.groupBoxSelectedItems.TabStop = false;
 			this.groupBoxSelectedItems.Text = "Selected Item(s):";
+#if foo
 			// 
 			// buttonConfigureProperty
 			// 
@@ -118,12 +119,14 @@
 			this.toolTip1.SetToolTip(this.buttonConfigureProperty, "Configure Property");
 			this.buttonConfigureProperty.UseVisualStyleBackColor = true;
 			this.buttonConfigureProperty.Click += new System.EventHandler(this.buttonConfigureProperty_Click);
+#endif
 			// 
 			// buttonRemoveProperty
 			// 
 			this.buttonRemoveProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonRemoveProperty.Enabled = false;
-			this.buttonRemoveProperty.Location = new System.Drawing.Point(100, 125);
+//			this.buttonRemoveProperty.Location = new System.Drawing.Point(100, 125);
+			this.buttonRemoveProperty.Location = new System.Drawing.Point(70, 125);
 			this.buttonRemoveProperty.Name = "buttonRemoveProperty";
 			this.buttonRemoveProperty.Size = new System.Drawing.Size(24, 24);
 			this.buttonRemoveProperty.TabIndex = 40;
@@ -134,6 +137,7 @@
 			// 
 			// buttonAddProperty
 			// 
+#if foo
 			this.buttonAddProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonAddProperty.Enabled = false;
 			this.buttonAddProperty.Location = new System.Drawing.Point(70, 125);
@@ -144,6 +148,7 @@
 			this.toolTip1.SetToolTip(this.buttonAddProperty, "Add Property");
 			this.buttonAddProperty.UseVisualStyleBackColor = true;
 			this.buttonAddProperty.Click += new System.EventHandler(this.buttonAddProperty_Click);
+#endif
 			// 
 			// label3
 			// 
@@ -189,7 +194,7 @@
 			this.buttonRunHelperSetup.Size = new System.Drawing.Size(24, 24);
 			this.buttonRunHelperSetup.TabIndex = 36;
 			this.buttonRunHelperSetup.Text = "->";
-			this.toolTip1.SetToolTip(this.buttonRunHelperSetup, "Configure");
+			this.toolTip1.SetToolTip(this.buttonRunHelperSetup, "Add");
 			this.buttonRunHelperSetup.UseVisualStyleBackColor = true;
 			this.buttonRunHelperSetup.Click += new System.EventHandler(this.buttonRunSetupHelper_Click);
 			// 
@@ -205,14 +210,14 @@
 			this.comboBoxSetupHelperType.TabIndex = 35;
 			this.comboBoxSetupHelperType.SelectedIndexChanged += new System.EventHandler(this.comboBoxSetupHelperType_SelectedIndexChanged);
 			// 
-			// label2
+			// labelAddProperties
 			// 
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(9, 29);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(55, 13);
-			this.label2.TabIndex = 34;
-			this.label2.Text = "Configure:";
+			this.labelAddProperties.AutoSize = true;
+			this.labelAddProperties.Location = new System.Drawing.Point(9, 29);
+			this.labelAddProperties.Name = "labelAddProperties";
+			this.labelAddProperties.Size = new System.Drawing.Size(55, 13);
+			this.labelAddProperties.TabIndex = 34;
+			this.labelAddProperties.Text = "Add:";
 			// 
 			// toolTip1
 			// 
@@ -224,7 +229,8 @@
 			// buttonSelectDestinationOutputs
 			// 
 			this.buttonSelectDestinationOutputs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.buttonSelectDestinationOutputs.Location = new System.Drawing.Point(70, 355);
+//			this.buttonSelectDestinationOutputs.Location = new System.Drawing.Point(70, 355);
+			this.buttonSelectDestinationOutputs.Location = new System.Drawing.Point(90, 355);
 			this.buttonSelectDestinationOutputs.Name = "buttonSelectDestinationOutputs";
 			this.buttonSelectDestinationOutputs.Size = new System.Drawing.Size(24, 24);
 			this.buttonSelectDestinationOutputs.TabIndex = 41;
@@ -248,7 +254,7 @@
 			// buttonRenameElements
 			// 
 			this.buttonRenameElements.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.buttonRenameElements.Location = new System.Drawing.Point(40, 355);
+			this.buttonRenameElements.Location = new System.Drawing.Point(50, 355);
 			this.buttonRenameElements.Name = "buttonRenameElements";
 			this.buttonRenameElements.Size = new System.Drawing.Size(24, 24);
 			this.buttonRenameElements.TabIndex = 43;
@@ -304,14 +310,14 @@
 		private System.Windows.Forms.GroupBox groupBoxSelectedItems;
 		private System.Windows.Forms.Button buttonRunHelperSetup;
 		private System.Windows.Forms.ComboBox comboBoxSetupHelperType;
-		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label labelAddProperties;
 		private System.Windows.Forms.ListView listViewProperties;
 		private System.Windows.Forms.ColumnHeader columnHeader2;
 		private System.Windows.Forms.Label label3;
-		private System.Windows.Forms.Button buttonAddProperty;
+//		private System.Windows.Forms.Button buttonAddProperty;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.Button buttonRemoveProperty;
-		private System.Windows.Forms.Button buttonConfigureProperty;
+//		private System.Windows.Forms.Button buttonConfigureProperty;
 		private System.Windows.Forms.Button buttonSelectDestinationOutputs;
 		private System.Windows.Forms.Button buttonDeleteElements;
 		private System.Windows.Forms.Button buttonRenameElements;

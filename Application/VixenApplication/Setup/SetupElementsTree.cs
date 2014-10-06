@@ -28,14 +28,15 @@ namespace VixenApplication.Setup
 
 			buttonAddTemplate.Image = Tools.GetIcon(Resources.add, 16);
 			buttonAddTemplate.Text = "";
-			buttonRunHelperSetup.Image = Tools.GetIcon(Resources.cog_go, 16);
+//			buttonRunHelperSetup.Image = Tools.GetIcon(Resources.cog_go, 16);
+			buttonRunHelperSetup.Image = Tools.GetIcon(Resources.add, 16);
 			buttonRunHelperSetup.Text = "";
-			buttonAddProperty.Image = Tools.GetIcon(Resources.add, 16);
-			buttonAddProperty.Text = "";
+//			buttonAddProperty.Image = Tools.GetIcon(Resources.add, 16);
+//			buttonAddProperty.Text = "";
 			buttonRemoveProperty.Image = Tools.GetIcon(Resources.delete, 16);
 			buttonRemoveProperty.Text = "";
-			buttonConfigureProperty.Image = Tools.GetIcon(Resources.cog, 16);
-			buttonConfigureProperty.Text = "";
+//			buttonConfigureProperty.Image = Tools.GetIcon(Resources.cog, 16);
+//			buttonConfigureProperty.Text = "";
 			buttonDeleteElements.Image = Tools.GetIcon(Resources.delete, 16);
 			buttonDeleteElements.Text = "";
 			buttonRenameElements.Image = Tools.GetIcon(Resources.pencil, 16);
@@ -179,24 +180,82 @@ namespace VixenApplication.Setup
 		private bool ConfigureSelectedProperties()
 		{
 			bool result = false;
+			do
+			{
+				if (listViewProperties.SelectedItems.Count == 1)
+				{
+					var property = listViewProperties.SelectedItems[0].Tag as IPropertyModuleInstance;
+					if (property != null)
+					{
+						// this triggers a bug in the properties manager.
+						// if (new VixenModules.Property.Color.ColorDescriptor().TypeId == property.TypeId)
+						// So I have to do it this way
+						// the Color property gets special handling
+						if ("bff34727-6b88-4f87-82b7-68424498c725" == property.TypeId.ToString())
+						{
+							// this does not work. so search the list the hard way
+							// comboBoxSetupHelperType.SelectedIndex = comboBoxSetupHelperType.Items.IndexOf("Color Handling");
+							comboBoxSetupHelperType.SelectedIndex = 0;
+							int newIndex = 0;
+							foreach (var i in comboBoxSetupHelperType.Items)
+							{
+								// is this the color handling entry?
+								if ("Color Handling" == i.ToString())
+								{
+									// found it. Move on
+									break;
+								}
+								// next entry
+								newIndex++;
+							} // end search for the color handling entry
 
-			if (listViewProperties.SelectedItems.Count == 1) {
-				var property = listViewProperties.SelectedItems[0].Tag as IPropertyModuleInstance;
-				if (property != null) {
-					result = property.Setup();
-					if (result) {
-						// try and 'clone' the property data to any other selected element with this property data
-						foreach (ElementNode elementNode in SelectedElements) {
-							IPropertyModuleInstance p = elementNode.Properties.Get(property.TypeId);
-							if (p != null) {
-								p.ModuleData = property.ModuleData.Clone();
+							// did we faile to find the entry?
+							if (newIndex == comboBoxSetupHelperType.Items.Count)
+							{
+								// could not find the entry we are looking for.
+								// Logging.Error("Could not find the Color Handling entry in the list of possible filters.")
+								break;
+							}
+							// set the index of the color handling entry.
+							comboBoxSetupHelperType.SelectedIndex = newIndex;
+
+							// get the color handler
+							ComboBoxItem item = (comboBoxSetupHelperType.SelectedItem as ComboBoxItem);
+							if (item != null)
+							{
+								IElementSetupHelper helper = item.Value as IElementSetupHelper;
+								helper.Perform(elementTree.SelectedElementNodes);
+								elementTree.PopulateNodeTree();
+
+								UpdateFormWithNode();
+								OnElementsChanged();
 							}
 						}
+						else
+						{ // this is not the color property. Do a generic operation
+							result = property.Setup();
+							if (result)
+							{
+								// try and 'clone' the property data to any other selected element with this property data
+								foreach (ElementNode elementNode in SelectedElements)
+								{
+									IPropertyModuleInstance p = elementNode.Properties.Get(property.TypeId);
+									if (p != null)
+									{
+										p.ModuleData = property.ModuleData.Clone();
+									}
+								}
 
-						OnElementsChanged();
+								OnElementsChanged();
+							}
+						}
 					}
 				}
-			}
+				else
+				{
+					MessageBox.Show("Cannot Complete request. Only One property can be configured at a time.");
+				}
+			} while (false);
 
 			return result;
 		}
@@ -256,9 +315,9 @@ namespace VixenApplication.Setup
 
 			List<ElementNode> elementList = SelectedElements.ToList();
 			buttonRunHelperSetup.Enabled = elementList.Any();
-			buttonAddProperty.Enabled = elementList.Any();
+//			buttonAddProperty.Enabled = elementList.Any();
 			buttonRemoveProperty.Enabled = listViewProperties.Items.Count > 0 && listViewProperties.SelectedItems.Count > 0;
-			buttonConfigureProperty.Enabled = listViewProperties.Items.Count > 0 && listViewProperties.SelectedItems.Count == 1;
+//			buttonConfigureProperty.Enabled = listViewProperties.Items.Count > 0 && listViewProperties.SelectedItems.Count == 1;
 			buttonDeleteElements.Enabled = elementList.Any();
 			buttonRenameElements.Enabled = elementList.Any();
 			buttonSelectDestinationOutputs.Enabled = elementList.Any();

@@ -38,6 +38,8 @@
 			this.radioButtonOptionSingle = new System.Windows.Forms.RadioButton();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
+			this.comboBoxColorOrder = new System.Windows.Forms.ComboBox();
+			this.labelColorOrder = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// buttonCancel
@@ -160,6 +162,31 @@
 			this.label3.TabIndex = 31;
 			this.label3.Text = "Colors:";
 			// 
+			// comboBoxColorOrder
+			// 
+			this.comboBoxColorOrder.Items.AddRange(new object[] {
+            "RGB",
+            "RBG",
+            "BRG",
+            "BGR",
+            "GRB",
+            "GBR"});
+			this.comboBoxColorOrder.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxColorOrder.FormattingEnabled = true;
+			this.comboBoxColorOrder.Location = new System.Drawing.Point(54, 255);
+			this.comboBoxColorOrder.Name = "comboBoxColorOrder";
+			this.comboBoxColorOrder.Size = new System.Drawing.Size(83, 24);
+			this.comboBoxColorOrder.TabIndex = 32;
+			// 
+			// labelColorOrder
+			// 
+			this.labelColorOrder.AutoSize = true;
+			this.labelColorOrder.Location = new System.Drawing.Point(145, 255);
+			this.labelColorOrder.Name = "labelColorOrder";
+			this.labelColorOrder.Size = new System.Drawing.Size(82, 17);
+			this.labelColorOrder.TabIndex = 33;
+			this.labelColorOrder.Text = "Color Order";
+			// 
 			// ColorSetupHelper
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -176,6 +203,8 @@
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.buttonOk);
+			this.Controls.Add(this.labelColorOrder);
+			this.Controls.Add(this.comboBoxColorOrder);
 			this.MaximizeBox = false;
 			this.MaximumSize = new System.Drawing.Size(480, 360);
 			this.MinimizeBox = false;
@@ -202,5 +231,7 @@
 		private System.Windows.Forms.RadioButton radioButtonOptionSingle;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label labelColorOrder;
+		private System.Windows.Forms.ComboBox comboBoxColorOrder;
 	}
 }
