@@ -31,6 +31,7 @@ namespace VixenApplication.Setup
 		{
 			this.components = new System.ComponentModel.Container();
 			this.groupBoxElements = new System.Windows.Forms.GroupBox();
+			this.checkBoxReverseElementOrder = new System.Windows.Forms.CheckBox();
 			this.buttonUnpatchElements = new System.Windows.Forms.Button();
 			this.labelFilterCount = new System.Windows.Forms.Label();
 			this.labelElementCount = new System.Windows.Forms.Label();
@@ -72,17 +73,24 @@ namespace VixenApplication.Setup
 			this.radioButtonUnconnectedPatchPointsOnly = new System.Windows.Forms.RadioButton();
 			this.buttonDoPatching = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
 			this.groupBoxElements.SuspendLayout();
 			this.groupBoxControllers.SuspendLayout();
 			this.groupBoxPatching.SuspendLayout();
 			this.groupBoxOutputOptions.SuspendLayout();
 			this.groupBoxElementOptions.SuspendLayout();
+			this.tableLayoutPanel1.SuspendLayout();
+			this.tableLayoutPanel2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// groupBoxElements
 			// 
-			this.groupBoxElements.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBoxElements.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxElements.AutoSize = true;
+			this.groupBoxElements.Controls.Add(this.checkBoxReverseElementOrder);
 			this.groupBoxElements.Controls.Add(this.buttonUnpatchElements);
 			this.groupBoxElements.Controls.Add(this.labelFilterCount);
 			this.groupBoxElements.Controls.Add(this.labelElementCount);
@@ -257,8 +265,10 @@ namespace VixenApplication.Setup
 			// 
 			// groupBoxControllers
 			// 
-			this.groupBoxControllers.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBoxControllers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxControllers.AutoSize = true;
 			this.groupBoxControllers.Controls.Add(this.labelLastOutput);
 			this.groupBoxControllers.Controls.Add(this.labelFirstOutput);
 			this.groupBoxControllers.Controls.Add(this.label9);
@@ -420,11 +430,13 @@ namespace VixenApplication.Setup
 			// 
 			// groupBoxPatching
 			// 
-			this.groupBoxPatching.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBoxPatching.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxPatching.AutoSize = true;
+			this.tableLayoutPanel1.SetColumnSpan(this.groupBoxPatching, 2);
+			this.groupBoxPatching.Controls.Add(this.tableLayoutPanel2);
 			this.groupBoxPatching.Controls.Add(this.labelPatchWarning);
 			this.groupBoxPatching.Controls.Add(this.labelPatchSummary);
-			this.groupBoxPatching.Controls.Add(this.groupBoxOutputOptions);
-			this.groupBoxPatching.Controls.Add(this.groupBoxElementOptions);
 			this.groupBoxPatching.Controls.Add(this.buttonDoPatching);
 			this.groupBoxPatching.Location = new System.Drawing.Point(3, 312);
 			this.groupBoxPatching.Name = "groupBoxPatching";
@@ -441,7 +453,7 @@ namespace VixenApplication.Setup
 			this.labelPatchWarning.Name = "labelPatchWarning";
 			this.labelPatchWarning.Size = new System.Drawing.Size(307, 13);
 			this.labelPatchWarning.TabIndex = 4;
-			this.labelPatchWarning.Text = "Warning: too many selected elements, some will not be patched";
+			this.labelPatchWarning.Text = "WARNING: too many selected elements, some will not be patched";
 			// 
 			// labelPatchSummary
 			// 
@@ -454,6 +466,9 @@ namespace VixenApplication.Setup
 			// 
 			// groupBoxOutputOptions
 			// 
+			this.groupBoxOutputOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxOutputOptions.AutoSize = true;
 			this.groupBoxOutputOptions.Controls.Add(this.radioButtonAllOutputs);
 			this.groupBoxOutputOptions.Controls.Add(this.radioButtonUnpatchedOutputsOnly);
 			this.groupBoxOutputOptions.Location = new System.Drawing.Point(224, 14);
@@ -488,6 +503,9 @@ namespace VixenApplication.Setup
 			// 
 			// groupBoxElementOptions
 			// 
+			this.groupBoxElementOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxElementOptions.AutoSize = true;
 			this.groupBoxElementOptions.Controls.Add(this.radioButtonAllAvailablePatchPoints);
 			this.groupBoxElementOptions.Controls.Add(this.radioButtonUnconnectedPatchPointsOnly);
 			this.groupBoxElementOptions.Location = new System.Drawing.Point(6, 14);
@@ -537,13 +555,59 @@ namespace VixenApplication.Setup
 			this.toolTip1.InitialDelay = 200;
 			this.toolTip1.ReshowDelay = 40;
 			// 
+			// tableLayoutPanel1
+			// 
+			this.tableLayoutPanel1.AutoSize = true;
+			this.tableLayoutPanel1.ColumnCount = 2;
+			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel1.Controls.Add(this.groupBoxElements, 0, 0);
+			this.tableLayoutPanel1.Controls.Add(this.groupBoxPatching, 0, 1);
+			this.tableLayoutPanel1.Controls.Add(this.groupBoxControllers, 1, 0);
+			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+			this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+			this.tableLayoutPanel1.RowCount = 2;
+			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 221F));
+			this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 511);
+			this.tableLayoutPanel1.TabIndex = 34;
+			// 
+			// tableLayoutPanel2
+			// 
+			this.tableLayoutPanel2.AutoSize = true;
+			this.tableLayoutPanel2.ColumnCount = 2;
+			this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+			this.tableLayoutPanel2.Controls.Add(this.groupBoxElementOptions, 0, 0);
+			this.tableLayoutPanel2.Controls.Add(this.groupBoxOutputOptions, 1, 0);
+			this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Top;
+			this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 16);
+			this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+			this.tableLayoutPanel2.RowCount = 1;
+			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.tableLayoutPanel2.Size = new System.Drawing.Size(438, 84);
+			this.tableLayoutPanel2.TabIndex = 5;
+			// 
+			// checkBoxReverseElementOrder
+			// 
+			this.checkBoxReverseElementOrder.AutoSize = true;
+			this.checkBoxReverseElementOrder.Location = new System.Drawing.Point(18, 200);
+			this.checkBoxReverseElementOrder.Name = "checkBoxReverseElementOrder";
+			this.checkBoxReverseElementOrder.Size = new System.Drawing.Size(179, 21);
+			this.checkBoxReverseElementOrder.TabIndex = 23;
+			this.checkBoxReverseElementOrder.Text = "Reverse Element Order";
+			this.toolTip1.SetToolTip(this.checkBoxReverseElementOrder, "The order in which Elements will be patched to controller outputs. This does not " +
+        "effect the order in which color channels are patched to controller outputs.");
+			this.checkBoxReverseElementOrder.UseVisualStyleBackColor = true;
+			this.checkBoxReverseElementOrder.CheckedChanged += new System.EventHandler(this.checkBoxReverseElementOrder_CheckedChanged);
+			// 
 			// SetupPatchingSimple
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.groupBoxPatching);
-			this.Controls.Add(this.groupBoxControllers);
-			this.Controls.Add(this.groupBoxElements);
+			this.Controls.Add(this.tableLayoutPanel1);
 			this.DoubleBuffered = true;
 			this.Name = "SetupPatchingSimple";
 			this.Size = new System.Drawing.Size(450, 550);
@@ -558,7 +622,12 @@ namespace VixenApplication.Setup
 			this.groupBoxOutputOptions.PerformLayout();
 			this.groupBoxElementOptions.ResumeLayout(false);
 			this.groupBoxElementOptions.PerformLayout();
+			this.tableLayoutPanel1.ResumeLayout(false);
+			this.tableLayoutPanel1.PerformLayout();
+			this.tableLayoutPanel2.ResumeLayout(false);
+			this.tableLayoutPanel2.PerformLayout();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -606,5 +675,8 @@ namespace VixenApplication.Setup
 		private Label labelFirstOutput;
 		private Label label9;
 		private Label label8;
+		private TableLayoutPanel tableLayoutPanel1;
+		private TableLayoutPanel tableLayoutPanel2;
+		private CheckBox checkBoxReverseElementOrder;
 	}
 }
