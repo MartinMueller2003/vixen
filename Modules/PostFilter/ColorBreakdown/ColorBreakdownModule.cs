@@ -183,6 +183,16 @@ namespace VixenModules.OutputFilter.ColorBreakdown
 			Name = "Unnamed";
 		}
 
+		/// <summary>
+		/// Mechanism to copy data from a reference item into this item
+		/// </summary>
+		/// <param name="incomingData"></param>
+		public void Update( ColorBreakdownItem incomingData)
+		{
+			Color = incomingData.Color;
+			Name = incomingData.Name;
+		}
+
 		[DataMember]
 		public Color Color { get; set; }
 

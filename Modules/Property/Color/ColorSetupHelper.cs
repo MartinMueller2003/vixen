@@ -310,7 +310,7 @@ namespace VixenModules.Property.Color
 						for (int index = 0; index < breakdown.BreakdownItems.Count; index++ )
 						{
 							// update the data for this item
-							breakdown.BreakdownItems[index].Color = newBreakdownItems[index].Color;
+							breakdown.BreakdownItems[index].Update(newBreakdownItems[index]);
 						} // end replace the color on the CBI
 					} // end same number of CBIs
 
