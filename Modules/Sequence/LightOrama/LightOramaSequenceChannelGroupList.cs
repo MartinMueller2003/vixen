@@ -24,7 +24,7 @@ namespace VixenModules.SequenceType.LightOrama
 		public UInt64 Index { get; private set; }
 		public UInt64 TotalMs { get; private set; }
 		public List<UInt64> Children { get; private set; }
-		public bool HasParent { get; set; }
+		public List<UInt64> Parents { get; private set; }
 
 		private Dictionary<UInt64, ILorObject> m_sequenceObjects = null;
 
@@ -34,10 +34,10 @@ namespace VixenModules.SequenceType.LightOrama
 		public LorChannelGroupList(XElement element, Dictionary<UInt64, ILorObject> sequenceObjects)
 		{
 			Children = new List<UInt64>();
+			Parents = new List<UInt64>();
 			Name = string.Empty;
 			Index = 0;
 			TotalMs = 0;
-			HasParent = false;
 			m_sequenceObjects = sequenceObjects;
 			Parse(element);
 		} // LorChannelGroupList
@@ -59,10 +59,10 @@ namespace VixenModules.SequenceType.LightOrama
 					case "channelGroups":
 						foreach (XElement channelGroup in element.Elements("channelGroup").ToList())
 						{
-							UInt64 index = (null == channelGroup.Attribute("savedIndex")) ? UInt64.MaxValue : UInt64.Parse(channelGroup.Attribute("savedIndex").Value);
-							Children.Add(index);
+							UInt64 childIndex = (null == channelGroup.Attribute("savedIndex")) ? UInt64.MaxValue : UInt64.Parse(channelGroup.Attribute("savedIndex").Value);
+							Children.Add(childIndex);
 							// mark the child as having a parent
-							m_sequenceObjects[index].HasParent = true;
+							m_sequenceObjects[childIndex].Parents.Add(Index);
 						}
 						break;
 

@@ -49,7 +49,6 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LightOramaSequenceImporterChannelMapper));
 			this.listViewMapping = new System.Windows.Forms.ListView();
 			this.lorChannel = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.lorChannelOutput = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.lorChannelName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.lorChannelColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.destinationElement = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -76,7 +75,6 @@
 			| System.Windows.Forms.AnchorStyles.Left)));
 			this.listViewMapping.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.lorChannel,
-            this.lorChannelOutput,
             this.lorChannelName,
             this.lorChannelColor,
             this.destinationElement,
@@ -114,11 +112,6 @@
 			// 
 			this.lorChannel.Text = "LOR Channel";
 			this.lorChannel.Width = 68;
-			// 
-			// LORChannelOutput
-			// 
-			this.lorChannelOutput.Text = "LOR Output";
-			this.lorChannelOutput.Width = 68;
 			// 
 			// LORChannelName
 			// 
@@ -336,7 +329,6 @@
 		private System.Windows.Forms.ColumnHeader lorChannelColor;
 		private System.Windows.Forms.Button buttonCancel;
 		private System.Windows.Forms.ColumnHeader lorChannel;
-		private System.Windows.Forms.ColumnHeader lorChannelOutput;
 		private System.Windows.Forms.ColumnHeader destinationElement;
 		private System.Windows.Forms.Button buttonOK;
 		private System.Windows.Forms.Button buttonAutoPopulate;

@@ -22,31 +22,31 @@ namespace VixenModules.SequenceType.LightOrama
 
 		public ISequence Sequence { get; set; }
 
-		private CoversionProgressForm conversionProgressBar = null;
-		public LightOramaSequenceData parsedLightOramaSequence = null;
-		private List<LorChannelMapping> mappings = null;
+		private CoversionProgressForm m_conversionProgressBar = null;
+		private LightOramaSequenceData m_parsedLightOramaSequence = null;
+		private List<LorChannelMapping> m_mappings = null;
 
 		/// <summary>
 		/// Convert LOR Sequence data into a Vixen 3 sequence
 		/// </summary>
 		/// <param name="LightOramaSequence"></param>
 		/// <param name="list"></param>
-		public Vixen3SequenceCreator(LightOramaSequenceData LightOramaSequence, List<LorChannelMapping> list)
+		public Vixen3SequenceCreator(LightOramaSequenceData LightOramaSequence, List<LorChannelMapping> mappings)
 		{
-			parsedLightOramaSequence = LightOramaSequence;
-			mappings = list;
+			m_parsedLightOramaSequence = LightOramaSequence;
+			m_mappings = mappings;
 
-			conversionProgressBar = new CoversionProgressForm();
-			conversionProgressBar.Show();
+			m_conversionProgressBar = new CoversionProgressForm();
+			m_conversionProgressBar.Show();
 
-			conversionProgressBar.SetupProgressBar(0, parsedLightOramaSequence.mappings.Count);
+			m_conversionProgressBar.SetupProgressBar(0, m_parsedLightOramaSequence.mappings.Count);
 
-			conversionProgressBar.StatusLineLabel = "Converting Light-O-Rama sequence";
+			m_conversionProgressBar.StatusLineLabel = "Converting Light-O-Rama sequence";
 
 			createTimedSequence();
 			importSequenceData();
 
-			conversionProgressBar.Close();
+			m_conversionProgressBar.Close();
 		} // Vixen3SequenceCreator
 
 		private void createTimedSequence()
@@ -57,9 +57,9 @@ namespace VixenModules.SequenceType.LightOrama
 			//I am not sure what to do with this, but it looks like John had a plan.
 			MarkCollection mc = new MarkCollection();
 
-			Sequence.Length = TimeSpan.FromMilliseconds(parsedLightOramaSequence.SeqLengthInMills);
+			Sequence.Length = TimeSpan.FromMilliseconds(m_parsedLightOramaSequence.SeqLengthInMills);
 
-			var songFileName = parsedLightOramaSequence.SongPath + Path.DirectorySeparatorChar + parsedLightOramaSequence.SongFileName;
+			var songFileName = m_parsedLightOramaSequence.SongPath + Path.DirectorySeparatorChar + m_parsedLightOramaSequence.SongFileName;
 			if (songFileName != null)
 			{
 				if (File.Exists(songFileName))
@@ -89,13 +89,13 @@ namespace VixenModules.SequenceType.LightOrama
 			int blue = 0;
 
 			// for each channel in the LightOrama sequence
-			foreach (LorChannelMapping channelMapping in mappings)
+			foreach (LorChannelMapping channelMapping in m_mappings)
 			{
-				conversionProgressBar.IncrementProgressBar();
+				m_conversionProgressBar.IncrementProgressBar();
 				Application.DoEvents();
 
 				// is this channel defined in the LOR channel list?
-				if( false == parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)) )
+				if( false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)) )
 				{
 					// channel is not in our list
 					Logging.Error("Channel " + channelMapping.ChannelNumber + " in the mapping table does not exist in the LOR channel table.");
@@ -109,7 +109,7 @@ namespace VixenModules.SequenceType.LightOrama
 					continue;
 				} // end no output channel defined
 
-				LorChannel lorChannel = parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
+				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
 				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(channelMapping.ElementNodeId);
 				if (null == vixElement)
 				{

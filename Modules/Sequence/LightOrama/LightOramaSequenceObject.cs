@@ -21,8 +21,8 @@ namespace VixenModules.SequenceType.LightOrama
 	{
 		UInt64 Index { get; }
 		string Name { get; }
-		bool HasParent { get; set; }
 		List<UInt64> Children { get; }
+		List<UInt64> Parents { get; }
 
 		void Parse(XElement element);
 

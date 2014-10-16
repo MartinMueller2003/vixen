@@ -93,7 +93,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 					foreach (XElement element in root.Elements().ToList())
 					{
-//						Logging.Info("Element Name: sequence.'" + element.Name.ToString() + "'");
+						//						Logging.Info("Element Name: sequence.'" + element.Name.ToString() + "'");
 
 						switch (element.Name.ToString())
 						{
@@ -166,9 +166,12 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			foreach (LorChannel channel in SequenceObjects.Values.OfType<LorChannel>().ToList())
 			{
-				LorChannelMapping mapping = new LorChannelMapping(channel.Name, channel.Color, channel.Index, string.Empty);
-				mapping.DestinationColor = channel.Color;
-				mapping.ColorMixing = UInt64.MaxValue != channel.RgbChannel;
+				LorChannelMapping mapping = new LorChannelMapping(channel.Name,
+																  channel.Color,
+																  channel.Index,
+																  Guid.Empty,
+																  channel.Color,
+																  UInt64.MaxValue != channel.RgbChannel);
 				mappings.Add(mapping);
 			}
 		} // CreateMappingList

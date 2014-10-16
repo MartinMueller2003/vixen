@@ -27,7 +27,7 @@ namespace VixenModules.SequenceType.LightOrama
 		public string TypeName { get { return this.GetType().ToString(); } }
 		public UInt64 RgbChannel { get; set; }
 		public List<UInt64> Children { get; private set; }
-		public bool HasParent { get; set; }
+		public List<UInt64> Parents { get; private set; }
 		public List<ILorEffect> Effects { get; private set; }
 
 		/// <summary>
@@ -41,8 +41,8 @@ namespace VixenModules.SequenceType.LightOrama
 			Length = 0;
 			RgbChannel = UInt64.MaxValue;
 			Effects = new List<ILorEffect>();
-			HasParent = false;
 			Children = new List<UInt64>();
+			Parents = new List<UInt64>();
 			Parse(element);
 		} // LorChannel
 

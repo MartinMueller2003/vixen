@@ -25,7 +25,6 @@ namespace VixenModules.SequenceType.LightOrama
 		private enum mapperColumnId
 		{
 			lorChannelId = 0,
-			lorchannelOutput,
 			lorChannelName,
 			lorchannelColor,
 			v3Destination,
@@ -36,8 +35,18 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <summary>
 		/// Fixed Channel offset to RGB Pixel color translation
 		/// </summary>
-		private Dictionary<string, List<Color>> m_defaultPixelColors = new Dictionary<string, List<Color>>(); //Color[] { Color.Red, Color.Green, Color.Blue };
+		private Dictionary<string, List<Color>> m_defaultPixelColors = new Dictionary<string, List<Color>>()
+				{
+					{ "RGB", new List<Color>{ Color.Red, Color.Green, Color.Blue} },
+					{ "RBG", new List<Color>{ Color.Red, Color.Blue, Color.Green} },
+					{ "BRG", new List<Color>{ Color.Blue, Color.Red, Color.Green} },
+					{ "BGR", new List<Color>{ Color.Blue, Color.Green, Color.Red} },
+					{ "GRB", new List<Color>{ Color.Green, Color.Red, Color.Blue} },
+					{ "GBR", new List<Color>{ Color.Green, Color.Blue, Color.Red} }
+				};
 
+		public List<LorChannelMapping> Mappings { get; set; }
+		public string MappingName { get; set; }
 
 		public LightOramaSequenceImporterChannelMapper(List<LorChannelMapping> mappings, bool mapExists, string mappingName, LightOramaSequenceData parsedLorSequence)
 		{
@@ -51,47 +60,11 @@ namespace VixenModules.SequenceType.LightOrama
 			checkBoxRGB.Enabled = true;
 			comboBoxColorOrder.SelectedIndex = 0;
 			comboBoxColorOrder.Enabled = false;
+		} // LightOramaSequenceImporterChannelMapper
 
-			List<Color> colorList = new List<Color>();
-			colorList.Add(Color.Red);
-			colorList.Add(Color.Green);
-			colorList.Add(Color.Blue);
-			m_defaultPixelColors.Add("RGB", new List<Color>(colorList));
-
-			colorList.Clear();
-			colorList.Add(Color.Red);
-			colorList.Add(Color.Blue);
-			colorList.Add(Color.Green);
-			m_defaultPixelColors.Add("RBG", new List<Color>(colorList));
-
-			colorList.Clear();
-			colorList.Add(Color.Blue);
-			colorList.Add(Color.Red);
-			colorList.Add(Color.Green);
-			m_defaultPixelColors.Add("BRG", new List<Color>(colorList));
-
-			colorList.Clear();
-			colorList.Add(Color.Blue);
-			colorList.Add(Color.Green);
-			colorList.Add(Color.Red);
-			m_defaultPixelColors.Add("BGR", new List<Color>(colorList));
-
-			colorList.Clear();
-			colorList.Add(Color.Green);
-			colorList.Add(Color.Red);
-			colorList.Add(Color.Blue);
-			m_defaultPixelColors.Add("GRB", new List<Color>(colorList));
-
-			colorList.Clear();
-			colorList.Add(Color.Green);
-			colorList.Add(Color.Blue);
-			colorList.Add(Color.Red);
-			m_defaultPixelColors.Add("GBR", new List<Color>(colorList));
-		}
-
-		public List<LorChannelMapping> Mappings { get; set; }
-		public string MappingName { get; set; }
-
+		/// <summary>
+		/// Populate the element node multiselect tree
+		/// </summary>
 		private void PopulateNodeTreeMultiSelect()
 		{
 			multiSelectTreeview1.BeginUpdate();
@@ -103,9 +76,13 @@ namespace VixenModules.SequenceType.LightOrama
 			}
 
 			multiSelectTreeview1.EndUpdate();
-		}
+		} // PopulateNodeTreeMultiSelect
 
-
+		/// <summary>
+		/// Add a node to the element tree
+		/// </summary>
+		/// <param name="collection"></param>
+		/// <param name="elementNode"></param>
 		private void AddNodeToTree(TreeNodeCollection collection, ElementNode elementNode)
 		{
 			TreeNode addedNode = new TreeNode()
@@ -121,8 +98,12 @@ namespace VixenModules.SequenceType.LightOrama
 			{
 				AddNodeToTree(addedNode.Nodes, childNode);
 			}
-		}
+		} // AddNodeToTree
 
+		/// <summary>
+		/// Parse the mapping selection and set up the final mappings
+		/// </summary>
+		/// <param name="node"></param>
 		private void AddVixen3ElementTolightOramaChannel(TreeNode node)
 		{
 			// this is a bit of a dodgy hack to allow elements to be repeated when dragged to the grid.
@@ -163,7 +144,7 @@ namespace VixenModules.SequenceType.LightOrama
 				} // end process pixel
 				else
 				{
-					//Not sure where to get a node color from Vixen 3 stuff so if we have one in Vixen 2 just use it
+					//Not sure where to get a node color from Vixen 3 stuff so if we have one in LOR just use it
 					item.SubItems[(int)mapperColumnId.importColor].Text = item.SubItems[(int)mapperColumnId.lorchannelColor].Text;
 					item.SubItems[(int)mapperColumnId.importColor].BackColor = item.SubItems[(int)mapperColumnId.lorchannelColor].BackColor;
 					item.SubItems[(int)mapperColumnId.colorMixing].Text = string.Empty;
@@ -190,7 +171,7 @@ namespace VixenModules.SequenceType.LightOrama
 					ParseNode(node);
 				}
 			}
-		}
+		} // ParseNodes
 
 		private void ParseNode(TreeNode node)
 		{
@@ -207,32 +188,40 @@ namespace VixenModules.SequenceType.LightOrama
 			}
 		}
 
+		/// <summary>
+		/// Try to associate the color name with a mapped color. If no mapped color available use the system color name
+		/// </summary>
+		/// <param name="color"></param>
+		/// <returns></returns>
 		private static String GetColorName(Color color)
 		{
+			string response = String.Empty;
+
 			var predefined = typeof(Color).GetProperties(BindingFlags.Public | BindingFlags.Static);
 			var match = (from p in predefined
 						 where ((Color)p.GetValue(null, null)).ToArgb() == color.ToArgb()
 						 select (Color)p.GetValue(null, null));
 			if (match.Any())
 			{
-				return match.First().Name;
+				response = match.First().Name;
 			}
-			return String.Empty;
-		}
+			return response;
+		} // GetColorName
 
+		/// <summary>
+		/// Set up the on screen information
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void LightOramaSequenceImporterChannelMapper_Load(object sender, EventArgs e)
 		{
 			listViewMapping.BeginUpdate();
-
 			listViewMapping.Items.Clear();
 
 			foreach (LorChannelMapping mapping in Mappings)
 			{
 				// create an empty row list
 				ListViewItem item = new ListViewItem((mapping.ChannelNumber + 1).ToString()) { UseItemStyleForSubItems = false };
-
-				// lorchannelOutput
-				item.SubItems.Add(mapping.ChannelOutput);
 
 				// lorChannelName
 				item.SubItems.Add(mapping.ChannelName);
@@ -251,19 +240,16 @@ namespace VixenModules.SequenceType.LightOrama
 					// v3Destination
 					item.SubItems.Add(targetNode.Element.Name);
 					item.SubItems[(int)mapperColumnId.v3Destination].Tag = targetNode;
-
-					// importColor
-					item.SubItems.Add(GetColorName(mapping.DestinationColor));
-					item.SubItems[(int)mapperColumnId.importColor].BackColor = (Color)TypeDescriptor.GetConverter(typeof(Color)).ConvertFromString(GetColorName(mapping.DestinationColor));
 				}
 				else
 				{
 					// v3Destination
 					item.SubItems.Add(string.Empty);
-
-					// importColor
-					item.SubItems.Add(string.Empty);
 				}
+
+				// importColor
+				item.SubItems.Add(GetColorName(mapping.DestinationColor));
+				item.SubItems[(int)mapperColumnId.importColor].BackColor = (Color)TypeDescriptor.GetConverter(typeof(Color)).ConvertFromString(GetColorName(mapping.DestinationColor));
 
 				// colorMixing
 				if (true == mapping.ColorMixing)
@@ -277,15 +263,16 @@ namespace VixenModules.SequenceType.LightOrama
 
 				//set the lor columns to readonly
 				item.SubItems[(int)mapperColumnId.lorChannelId].BackColor = Color.LightGray;
-				item.SubItems[(int)mapperColumnId.lorchannelOutput].BackColor = Color.LightGray;
 				item.SubItems[(int)mapperColumnId.lorChannelName].BackColor = Color.LightGray;
 
 				listViewMapping.Items.Add(item);
 			}
+
+			listViewMapping.AutoResizeColumns( ColumnHeaderAutoResizeStyle.ColumnContent);
 			listViewMapping.EndUpdate();
 
 			PopulateNodeTreeMultiSelect();
-		}
+		} // LightOramaSequenceImporterChannelMapper_Load
 
 		private void CreateLorToV3MappingTable()
 		{
@@ -304,7 +291,6 @@ namespace VixenModules.SequenceType.LightOrama
 					Mappings.Add(new LorChannelMapping(itemrow.SubItems[(int)mapperColumnId.lorChannelName].Text,
 													lightOramaColor,
 													Convert.ToUInt64(itemrow.SubItems[(int)mapperColumnId.lorChannelId].Text) - 1,
-													itemrow.SubItems[(int)mapperColumnId.lorchannelOutput].Text,
 													node.Id,
 													itemrow.SubItems[(int)mapperColumnId.importColor].BackColor,
 													(itemrow.SubItems[(int)mapperColumnId.colorMixing].Text) == "Yes"));
@@ -315,7 +301,6 @@ namespace VixenModules.SequenceType.LightOrama
 					Mappings.Add(new LorChannelMapping(itemrow.SubItems[(int)mapperColumnId.lorChannelName].Text,
 													lightOramaColor,
 													Convert.ToUInt64(itemrow.SubItems[(int)mapperColumnId.lorChannelId].Text) - 1,
-													itemrow.SubItems[(int)mapperColumnId.lorchannelOutput].Text,
 													Guid.Empty,
 													Color.Empty,
 													false));
@@ -324,7 +309,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 			Mappings = Mappings;
 			MappingName = TextBoxMappingName.Text;
-		}
+		} // CreateLorToV3MappingTable
 
 		/// <summary>
 		/// value of the RGB checkbox has changed
@@ -406,20 +391,20 @@ namespace VixenModules.SequenceType.LightOrama
 		private void buttonCancel_Click(object sender, EventArgs e)
 		{
 			//show message about cancelling
-		}
+		} // buttonCancel_Click
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
 			if (String.IsNullOrEmpty(TextBoxMappingName.Text))
 			{
-				MessageBox.Show("Please enter name of Map.", "Missing Name", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop);
+				MessageBox.Show("Please enter a name for this Map.", "Missing Name", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop);
 				DialogResult = System.Windows.Forms.DialogResult.None;
 			}
 			else
 			{
 				CreateLorToV3MappingTable();
 			}
-		}
+		} // buttonOK_Click
 
 		/// <summary>
 		/// Put up a form that allows the user to choose missing elements and automatically create them
@@ -428,9 +413,11 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="e"></param>
 		private void buttonAutoPopulate_Click(object sender, EventArgs e)
 		{
-			LightOramaAutoPopulateElementsForm autoPopForm = new LightOramaAutoPopulateElementsForm(m_parsedLorSequence);
+			LightOramaAutoPopulateElementsForm autoPopForm = new LightOramaAutoPopulateElementsForm(m_parsedLorSequence, Mappings);
 			autoPopForm.ShowDialog();
 			autoPopForm.Dispose();
+			LightOramaSequenceImporterChannelMapper_Load(sender, e);
+			listViewMapping.Refresh();
 		} // buttonAutoPopulate_Click
 
 		private void destinationColorButton_Click(object sender, EventArgs e)
@@ -452,7 +439,7 @@ namespace VixenModules.SequenceType.LightOrama
 					itemrow.SubItems[(int)mapperColumnId.importColor].BackColor = colorDlg.Color;
 				}
 			}
-		}
+		} // destinationColorButton_Click
 
 		#endregion
 
