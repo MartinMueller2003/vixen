@@ -24,6 +24,7 @@ namespace VixenModules.SequenceType.LightOrama
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
 		public LorEffectTwinkle(XElement element) : base(element) { }
+		public LorEffectTwinkle() { }
 
 		/// <summary>
 		/// Parse the xml stream
@@ -34,10 +35,27 @@ namespace VixenModules.SequenceType.LightOrama
 			base.Parse(effectElement);
 		} // Parse
 
+		/// <summary>
+		/// Translate an effect into a V3 effect
+		/// </summary>
+		/// <param name="element"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
 		public EffectNode translateEffect(ElementNode element, Color color)
 		{
 			Logging.Error("LOR translateEffect. Unsupported effect type 'twinkle'. Ignoring effect");
 			return null;
-		}
+		} // translateEffect
+
+		/// <summary>
+		/// Combine effects from multiple channels for the same time frame into a single effect
+		/// </summary>
+		/// <param name="effectList"></param>
+		public ILorEffect CombineEffects(List<ILorEffect> effectList)
+		{
+			LorEffectTwinkle response = new LorEffectTwinkle();
+			Logging.Error("LOR CombineEffects. Unsupported effect type 'twinkle'. Ignoring effect");
+			return response;
+		} // CombineEffects
 	} // LorEffectTwinkle
 } // VixenModules.SequenceType.LightOrama

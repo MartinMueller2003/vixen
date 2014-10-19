@@ -24,6 +24,11 @@ namespace VixenModules.SequenceType.LightOrama
 		UInt64 Intensity { get; }
 		UInt64 StartIntensity { get; }
 		UInt64 EndIntensity { get; }
+		Color Color { get; set; }
+		bool HasBeenProcessed { get; }
+		bool RampUp { get; set; }
+		bool RampDown { get; set; }
+		ILorEffect CombineEffects(List<ILorEffect> list);
 
 		/// <summary>
 		/// translate the effect into a vixen effect and attach it to the element
@@ -41,22 +46,46 @@ namespace VixenModules.SequenceType.LightOrama
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
 		public UInt64 Intensity { get; set; }
-		public UInt64 StartIntensity { get; private set; }
-		public UInt64 EndIntensity { get; private set; }
-		public UInt64 StartTimeMs { get; private set; }
-		public UInt64 EndTimeMs { get; private set; }
+		public UInt64 StartIntensity { get; set; }
+		public UInt64 EndIntensity { get; set; }
+		public UInt64 StartTimeMs { get; set; }
+		public UInt64 EndTimeMs { get; set; }
+		public Color Color { get; set; }
+		public bool HasBeenProcessed { get; set; }
+		public bool RampUp { get; set; }
+		public bool RampDown { get; set; }
 
 		/// <summary>
 		/// Set up defaults
 		/// </summary>
 		public LorBaseEffect(XElement element)
 		{
+			SetDefaults();
+			Parse(element);
+		} // LorBaseEffect
+
+		/// <summary>
+		/// Set up defaults
+		/// </summary>
+		public LorBaseEffect()
+		{
+			SetDefaults();
+		} // LorBaseEffect
+
+		/// <summary>
+		/// Set up defaults
+		/// </summary>
+		private void SetDefaults()
+		{
 			Intensity = 0;
 			StartIntensity = 0;
 			EndIntensity = 0;
 			StartTimeMs = 0;
 			EndTimeMs = 0;
-			Parse(element);
+			Color = Color.Empty;
+			HasBeenProcessed = false;
+			RampUp = false;
+			RampDown = false;
 		} // LorBaseEffect
 
 		/// <summary>
@@ -71,6 +100,38 @@ namespace VixenModules.SequenceType.LightOrama
 			StartIntensity = (null == effectElement.Attribute("startIntensity")) ? 0 : Convert.ToUInt64(Double.Parse(effectElement.Attribute("startIntensity").Value) * 2.55);
 			EndIntensity = (null == effectElement.Attribute("endIntensity")) ? 0 : Convert.ToUInt64(Double.Parse(effectElement.Attribute("endIntensity").Value) * 2.55);
 		} // Parse
+
+		/// <summary>
+		/// Test whether the main characteristics are equal. Ignores color and processing flag.
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		public static bool operator ==(LorBaseEffect x, LorBaseEffect y)
+		{
+			return ((x.StartTimeMs == y.StartTimeMs) &&
+					(x.EndTimeMs == y.EndTimeMs) && 
+					(x.RampDown == y.RampDown) && 
+					(x.RampUp == y.RampUp));
+#if foo
+			return ((x.StartTimeMs == y.StartTimeMs) &&
+					(x.EndTimeMs == y.EndTimeMs) &&
+					(x.Intensity == y.Intensity) &&
+					(x.StartIntensity == y.StartIntensity) &&
+					(x.EndIntensity == y.EndIntensity));
+#endif
+		} // operator ==
+
+		/// <summary>
+		/// Test whether the main characteristics are NOT equal. Ignores color and processing flag.
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		public static bool operator !=(LorBaseEffect x, LorBaseEffect y)
+		{
+			return !(x == y);
+		} // operator !=
 
 		/// <summary>
 		/// Add a constantly increasing / deacreasing ramp
@@ -145,7 +206,7 @@ namespace VixenModules.SequenceType.LightOrama
 					// could not allocate the structure
 					Logging.Error("Light-O-Rama import: Could not allocate an instance of EffectNode");
 					break;
-				} 
+				}
 
 				// set intensity and color
 				effectNode.Effect.ParameterValues = new object[] { (Convert.ToDouble(Intensity) / Convert.ToDouble(byte.MaxValue)), v3color };

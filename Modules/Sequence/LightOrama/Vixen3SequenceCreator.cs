@@ -49,6 +49,9 @@ namespace VixenModules.SequenceType.LightOrama
 			m_conversionProgressBar.Close();
 		} // Vixen3SequenceCreator
 
+		/// <summary>
+		/// Create a blank timed sequence and bind an audio track to it.
+		/// </summary>
 		private void createTimedSequence()
 		{
 			Sequence = new TimedSequence() { SequenceData = new TimedSequenceData() };
@@ -60,10 +63,13 @@ namespace VixenModules.SequenceType.LightOrama
 			Sequence.Length = TimeSpan.FromMilliseconds(m_parsedLightOramaSequence.SeqLengthInMills);
 
 			var songFileName = m_parsedLightOramaSequence.SongPath + Path.DirectorySeparatorChar + m_parsedLightOramaSequence.SongFileName;
+			// do we have an audio file specified
 			if (songFileName != null)
 			{
+				// does the audio file exist?
 				if (File.Exists(songFileName))
 				{
+					// use it
 					Sequence.AddMedia(MediaService.Instance.GetMedia(songFileName));
 				}
 				else
@@ -71,8 +77,8 @@ namespace VixenModules.SequenceType.LightOrama
 					var message = string.Format("Could not locate the audio file '{0}'; please add it manually " +
 												"after import (Under Tools -> Associate Audio).", Path.GetFileName(songFileName));
 					MessageBox.Show(message, "Couldn't find audio");
-				}
-			}
+				} // audio file not found
+			} // Audio file was specified
 		} // createTimedSequence
 
 		/// <summary>
@@ -80,22 +86,14 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		private void importSequenceData()
 		{
-			// instantiate the state machine to process incoming data
-			// LightOramaSequenceImportSM import = new LightOramaSequenceImportSM(Sequence, parsedLightOramaSequence.EventPeriod);
-
-			// the current color is based on the intensity of a three channel group
-			int red = 0;
-			int green = 0;
-			int blue = 0;
-
 			// for each channel in the LightOrama sequence
-			foreach (LorChannelMapping channelMapping in m_mappings)
+			foreach (LorChannelMapping channelMapping in m_mappings.Where(x => x.ColorMixing == false))
 			{
 				m_conversionProgressBar.IncrementProgressBar();
 				Application.DoEvents();
 
 				// is this channel defined in the LOR channel list?
-				if( false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)) )
+				if (false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)))
 				{
 					// channel is not in our list
 					Logging.Error("Channel " + channelMapping.ChannelNumber + " in the mapping table does not exist in the LOR channel table.");
@@ -125,130 +123,59 @@ namespace VixenModules.SequenceType.LightOrama
 
 					// translate the effect
 					EffectNode node = effect.translateEffect(vixElement, color);
-					if( null != node)
+					if (null != node)
 					{
 						Sequence.InsertData(node);
 					}
 				} // end translate the effect
-
 			} // end process each channel
-#if foo
-			for (var currentElementNum = 0; currentElementNum < parsedLightOramaSequence.LorChannels.Count; currentElementNum++)
-			{
-				// Check to see if we are processing more elements than we have mappings. This showed up as an error for a user
-				if (currentElementNum >= mappings.Count)
-				{
-					Logging.Error("importSequenceData: Trying to process more elements (" + parsedLightOramaSequence.LorChannels.Count + ") than we have mappings. (" + mappings.Count + ")");
-					break;
-				}
-				ChannelMapping LightOramaChannelMapping = mappings[currentElementNum];
 
-				// set the channel number and the time for each LightOrama event.
-				// import.OpenChannel(LightOramaChannelMapping.ElementNodeId, Convert.ToDouble(parsedLightOramaSequence.EventPeriod));
-
-				// Logging.Debug("importSequenceData:currentElementNum: " + currentElementNum);
-
-				string elementName = LightOramaChannelMapping.ChannelName;
-				Color currentColor = Color.White;
-				byte currentIntensity = 0;
-
-				// do we have a valid guid conversion?
-				if (false == m_GuidToLightOramaChanList.ContainsKey(LightOramaChannelMapping.ElementNodeId))
-				{
-					Logging.Error("importSequenceData: Configuration error. GUID: '" + LightOramaChannelMapping.ElementNodeId + "' not found in m_GuidToLightOramaChanList.");
-					continue;
-				}
-
-				// is this a valid pixel configuration
-				if ((true == LightOramaChannelMapping.ColorMixing) && (3 != m_GuidToLightOramaChanList[LightOramaChannelMapping.ElementNodeId].Count))
-				{
-					Logging.Error("importSequenceData: Configuration error. Found '" + m_GuidToLightOramaChanList[LightOramaChannelMapping.ElementNodeId].Count + "' Light-O-Rama channels attached to element '" + elementName + "'. Expected 3(RGB). Converting element to non color mixing mode.");
-					LightOramaChannelMapping.ColorMixing = false;
-				}
-
-				// process each event for this LightOrama channel
-				for (uint currentEventNum = 0; currentEventNum < parsedLightOramaSequence.EventsPerElement; currentEventNum++)
-				{
-					// get the intensity for this LightOrama channel
-					currentIntensity = parsedLightOramaSequence.EventData[currentElementNum * parsedLightOramaSequence.EventsPerElement + currentEventNum];
-
-					// is this an RGB Pixel?
-					if (true == LightOramaChannelMapping.ColorMixing)
-					{
-						// Only process the RED channel of a three channel pixel
-						if (Color.Red != LightOramaChannelMapping.DestinationColor)
-						{
-							// this is not the red channel of a pixel
-							continue;
-						} // end not red pixel channel
-
-						red = 0;
-						green = 0;
-						blue = 0;
-
-						// process the input colors bound to this output channel
-						foreach (ChannelMapping LightOramaChannel in m_GuidToLightOramaChanList[LightOramaChannelMapping.ElementNodeId])
-						{
-							// Logging.Info("convertMapping: Processing LightOrama Channel '" + LightOramaChannel.ChannelName + "' color intensity.");
-
-							switch (LightOramaChannel.DestinationColor.Name)
-							{
-								case "Red":
-									{
-										red = Math.Max(red, parsedLightOramaSequence.EventData[(Convert.ToInt64(LightOramaChannel.ChannelNumber) - 1) * parsedLightOramaSequence.EventsPerElement + currentEventNum]);
-										break;
-									} // end Red
-
-								case "Green":
-									{
-										green = Math.Max(green, parsedLightOramaSequence.EventData[(Convert.ToInt64(LightOramaChannel.ChannelNumber) - 1) * parsedLightOramaSequence.EventsPerElement + currentEventNum]);
-										break;
-									} // end Green
-
-								case "Blue":
-									{
-										blue = Math.Max(blue, parsedLightOramaSequence.EventData[(Convert.ToInt64(LightOramaChannel.ChannelNumber) - 1) * parsedLightOramaSequence.EventsPerElement + currentEventNum]);
-										break;
-									} // end Red
-
-								default:
-									{
-										Logging.Error("importSequenceData pixel conversion processing error. Skipping processing unexpected color '" + LightOramaChannel.DestinationColor.Name + "' for LightOrama Channel '" + LightOramaChannel.ChannelName + "(" + LightOramaChannel.ChannelNumber + ")'. Color must be one of 'RED', 'GREEN' or 'BLUE'");
-										break;
-									} // end default
-							} // end switch on color
-						} // end process each LightOrama channel assigned to the v3 channel
-
-						// get the max intensity for this LightOrama channel set
-						currentIntensity = Convert.ToByte(Math.Min((int)255, Math.Max(red, Math.Max(green, blue))));
-
-						// Scale the color to full intensity and let the intensity value attenuate it.
-						if (0 != currentIntensity)
-						{
-							double multplier = Convert.ToDouble(byte.MaxValue) / Convert.ToDouble(currentIntensity);
-
-							red = Math.Min(((int)255), Convert.ToInt32(Convert.ToDouble(red) * multplier));
-							green = Math.Min(((int)255), Convert.ToInt32(Convert.ToDouble(green) * multplier));
-							blue = Math.Min(((int)255), Convert.ToInt32(Convert.ToDouble(blue) * multplier));
-						}
-
-						// set the final color
-						currentColor = Color.FromArgb(red, green, blue);
-					} // end pixel processing
-					else
-					{
-						// set the non pixel color value
-						currentColor = mappings[currentElementNum].DestinationColor;
-					} // end non pixel processing
-
-					// process the event through the state machine.
-					// import.processEvent(currentEventNum, currentColor, currentIntensity);
-				} // end for each event in the element / channel
-
-				// close this channel
-				// import.closeChannel();
-			} // end for each input channel
-#endif // foo
+			// now import the color mixing channels
+			importSequenceDataRGB();
 		} // end importSequenceData
-	}
-}
+
+		/// <summary>
+		/// Convert parsedLightOramaSequence into a V3 sequence
+		/// </summary>
+		private void importSequenceDataRGB()
+		{
+			// for each color mixing channel in the LightOrama sequence
+			foreach (LorChannelMapping channelMapping in m_mappings.Where(x => x.ColorMixing == true))
+			{
+				m_conversionProgressBar.IncrementProgressBar();
+				Application.DoEvents();
+
+				// is this channel defined in the LOR channel list?
+				if (false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)))
+				{
+					// channel is not in our list
+					Logging.Error("Channel " + channelMapping.ChannelNumber + " in the mapping table does not exist in the LOR channel table.");
+					continue;
+				} // end not a valid channel
+
+				// is this an unmapped output channel?
+				if (Guid.Empty == channelMapping.ElementNodeId)
+				{
+					// no output channel. Move on to the next channel
+					continue;
+				} // end no output channel defined
+
+				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
+				LorRgbChannel lorRgbChannel = m_parsedLightOramaSequence.SequenceObjects[lorChannel.Parents.Single()] as LorRgbChannel;
+				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(channelMapping.ElementNodeId);
+				if (null == vixElement)
+				{
+					Logging.Error("Vixen Element " + channelMapping.ElementNodeId + " could not be located.");
+					continue;
+				} // end could not locate the V3 element
+
+				if ("Mega Tree 1-2 A22 p11" == lorRgbChannel.Name)
+				{
+					MessageBox.Show("GotIt");
+				}
+				// translate each effect associated with this channel
+				lorRgbChannel.ConsolidateEffects(Sequence, vixElement);
+			} // end process each channel
+		} // end importSequenceDataRGB
+	} // Vixen3SequenceCreator
+} // VixenModules.SequenceType.LightOrama
