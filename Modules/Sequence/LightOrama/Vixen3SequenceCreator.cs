@@ -122,8 +122,8 @@ namespace VixenModules.SequenceType.LightOrama
 					Color color = (Color.Empty == channelMapping.DestinationColor) ? lorChannel.Color : channelMapping.DestinationColor;
 
 					// translate the effect
-					EffectNode node = effect.translateEffect(vixElement, color);
-					if (null != node)
+					List<EffectNode> nodeList = effect.translateEffect(vixElement, color);
+					foreach( EffectNode node in nodeList)
 					{
 						Sequence.InsertData(node);
 					}
@@ -169,10 +169,6 @@ namespace VixenModules.SequenceType.LightOrama
 					continue;
 				} // end could not locate the V3 element
 
-				if ("Mega Tree 1-2 A22 p11" == lorRgbChannel.Name)
-				{
-					MessageBox.Show("GotIt");
-				}
 				// translate each effect associated with this channel
 				lorRgbChannel.ConsolidateEffects(Sequence, vixElement);
 			} // end process each channel

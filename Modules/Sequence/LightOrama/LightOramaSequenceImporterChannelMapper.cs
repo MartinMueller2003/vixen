@@ -222,13 +222,11 @@ namespace VixenModules.SequenceType.LightOrama
 			{
 				// create an empty row list
 				ListViewItem item = new ListViewItem((mapping.ChannelNumber + 1).ToString()) { UseItemStyleForSubItems = false };
-
 				// lorChannelName
 				item.SubItems.Add(mapping.ChannelName);
 
 				// lorchannelColor
 				item.SubItems.Add(GetColorName(mapping.ChannelColor));
-
 				item.SubItems[(int)mapperColumnId.lorchannelColor].BackColor = (Color)TypeDescriptor.GetConverter(typeof(Color)).ConvertFromString(GetColorName(mapping.ChannelColor));
 
 				// do we have an existing mapping?

@@ -20,7 +20,7 @@ namespace VixenModules.SequenceType.LightOrama
 	public interface ILorObject
 	{
 		UInt64 Index { get; }
-		string Name { get; }
+		string Name { get; set; }
 		List<UInt64> Children { get; }
 		List<UInt64> Parents { get; }
 

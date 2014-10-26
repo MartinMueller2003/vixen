@@ -41,10 +41,10 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="element"></param>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		public EffectNode translateEffect(ElementNode element, Color color)
+		public List<EffectNode> translateEffect(ElementNode element, Color color)
 		{
 			Logging.Error("LOR translateEffect. Unsupported effect type 'shimmer'. Ignoring effect");
-			return null;
+			return new List<EffectNode>(); ;
 		} // translateEffect
 
 		/// <summary>

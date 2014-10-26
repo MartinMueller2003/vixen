@@ -20,7 +20,7 @@ namespace VixenModules.SequenceType.LightOrama
 	{
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
-		public string Name { get; private set; }
+		public string Name { get; set; }
 		public Color Color { get; private set; }
 		public UInt64 Length { get; private set; }
 		public UInt64 Index { get; private set; }
@@ -83,7 +83,7 @@ namespace VixenModules.SequenceType.LightOrama
 								newEffect = new LorEffectIntensity(element);
 								break;
 
-							case "xtwinkle":
+							case "twinkle":
 								newEffect = new LorEffectTwinkle(element);
 								break;
 

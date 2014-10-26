@@ -23,9 +23,9 @@ namespace VixenModules.SequenceType.LightOrama
 	{
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
-		public LorEffectIntensity(XElement element) : base(element) { setRamps();}
+		public LorEffectIntensity(XElement element) : base(element) { setRamps(); }
 		public LorEffectIntensity() { setRamps(); }
-		private void setRamps() 
+		private void setRamps()
 		{
 			RampUp = EndIntensity > StartIntensity;
 			RampDown = EndIntensity < StartIntensity;
@@ -37,26 +37,26 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="element"></param>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		public EffectNode translateEffect(ElementNode element, Color color)
+		public List<EffectNode> translateEffect(ElementNode element, Color color)
 		{
-			EffectNode node = null;
+			List<EffectNode> nodeList = new List<EffectNode>();
 			// is this a constant pulse?
 			if (0 < Intensity)
 			{
-				node = GenerateSetLevelEffect(element, color);
+				nodeList.Add(GenerateSetLevelEffect(element, color));
 			}
 			// is this a constant pulse?
 			else if (EndIntensity == StartIntensity)
 			{
 				Intensity = StartIntensity;
-				node = GenerateSetLevelEffect(element, color);
+				nodeList.Add(GenerateSetLevelEffect(element, color));
 			}
 			else
 			{
 				// ramp
-				node = GeneratePulseEffect(element, color);
+				nodeList.Add(GeneratePulseEffect(element, color));
 			}
-			return node;
+			return nodeList;
 		} // translateEffect
 
 		/// <summary>
@@ -108,5 +108,99 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return response;
 		} // CombineEffects
+
+		/// <summary>
+		/// Add a constantly increasing / deacreasing ramp
+		/// </summary>
+		/// <param name="targetNode"></param>
+		/// <returns></returns>
+		protected EffectNode GeneratePulseEffect(ElementNode targetNode, Color color)
+		{
+			EffectNode effectNode = null;
+			const double startX = 0.0;
+			const double endX = 100.0;
+
+			do
+			{
+				// allocate the effect Module
+				IEffectModuleInstance pulseInstance = ApplicationServices.Get<IEffectModuleInstance>(Guid.Parse("cbd76d3b-c924-40ff-bad6-d1437b3dbdc0"));
+				if (null == pulseInstance)
+				{
+					Logging.Error("GeneratePulseEffect: Could not allocate an instance of IEffectModuleInstance");
+					break;
+				}
+
+				// Clone() Doesn't work! :(
+				pulseInstance.TargetNodes = new ElementNode[] { targetNode };
+				pulseInstance.TimeSpan = TimeSpan.FromMilliseconds((EndTimeMs - StartTimeMs) + 1);
+
+				if (null == (effectNode = new EffectNode(pulseInstance, TimeSpan.FromMilliseconds(StartTimeMs))))
+				{
+					// could not allocate the structure
+					Logging.Error("GeneratePulseEffect: Could not allocate an instance of EffectNode");
+					break;
+				}
+
+				effectNode.Effect.ParameterValues = new Object[]
+				{
+					new Curve(new PointPairList(new double[] {startX, endX}, new double[] {getY(StartIntensity), getY(EndIntensity)})), new ColorGradient(color)
+				};
+			} while (false);
+
+			return effectNode;
+		} // end GeneratePulseEffect
+
+		/// <summary>
+		/// Add a constant level effect to the destination channel
+		/// </summary>
+		/// <param name="targetNode"></param>
+		/// <param name="v3color"></param>
+		/// <returns></returns>
+		protected EffectNode GenerateSetLevelEffect(ElementNode targetNode, Color v3color)
+		{
+			EffectNode effectNode = null;
+			IEffectModuleInstance setLevelInstance = null;
+
+			do
+			{
+				if (null == (setLevelInstance = ApplicationServices.Get<IEffectModuleInstance>(Guid.Parse("32cff8e0-5b10-4466-a093-0d232c55aac0"))))
+				{
+					// could not get the structure
+					Logging.Error("Light-O-Rama import: Could not allocate an instance of IEffectModuleInstance");
+					break;
+				}
+
+				// Clone() Doesn't work! :(
+				setLevelInstance.TargetNodes = new ElementNode[] { targetNode };
+
+				// calculate how long the event lasts
+				setLevelInstance.TimeSpan = TimeSpan.FromMilliseconds((EndTimeMs - StartTimeMs) + 1);
+
+				// set the event and event starting time
+				if (null == (effectNode = new EffectNode(setLevelInstance, TimeSpan.FromMilliseconds(StartTimeMs))))
+				{
+					// could not allocate the structure
+					Logging.Error("Light-O-Rama import: Could not allocate an instance of EffectNode");
+					break;
+				}
+
+				// set intensity and color
+				effectNode.Effect.ParameterValues = new object[] { (Convert.ToDouble(Intensity) / Convert.ToDouble(byte.MaxValue)), v3color };
+			} while (false);
+
+			return effectNode;
+		} // end GenerateSetLevelEffect
+
+		/// <summary>
+		/// Calculate a location on the dimming curve
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		protected double getY(UInt64 value)
+		{
+			const double curveDivisor = byte.MaxValue / 100.0;
+
+			return Convert.ToDouble(value) / curveDivisor;
+		} // end getY
 	} // LorEffectIntensity
 } // VixenModules.SequenceType.LightOrama

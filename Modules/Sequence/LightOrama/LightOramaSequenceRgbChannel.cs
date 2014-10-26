@@ -20,7 +20,7 @@ namespace VixenModules.SequenceType.LightOrama
 	{
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
-		public string Name { get; private set; }
+		public string Name { get; set; }
 		public UInt64 Index { get; private set; }
 		public UInt64 TotalMs { get; private set; }
 		public List<UInt64> Children { get; private set; }

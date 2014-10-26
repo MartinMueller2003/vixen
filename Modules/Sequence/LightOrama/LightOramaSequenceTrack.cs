@@ -44,12 +44,19 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="trackElement"></param>
 		public void Parse(XElement trackElement)
 		{
+			// set up the progress bar
+			CoversionProgressForm ImportProgressBar = new CoversionProgressForm();
+			ImportProgressBar.Show();
+			ImportProgressBar.SetupProgressBar(0, trackElement.Elements().ToList().Count);
+			ImportProgressBar.StatusLineLabel = "Importing Light-O-Rama Track";
+
 			// get the length from this track
 			TrackLengthInMills = (trackElement.Attribute("totalCentiseconds") == null) ? 0 : UInt64.Parse(trackElement.Attribute("totalCentiseconds").Value) * ((UInt64)10);
 
 			foreach (XElement element in trackElement.Elements().ToList())
 			{
-				// Logging.Info("Element Name: tracks.track.'" + element.Name.ToString() + "'");
+				ImportProgressBar.IncrementProgressBar();
+				Application.DoEvents();
 
 				switch (element.Name.ToString())
 				{
@@ -82,6 +89,9 @@ namespace VixenModules.SequenceType.LightOrama
 			Logging.Debug("Parse Track Channel Count " + Channels.Count);
 			Logging.Debug("Parse Track loopLevels Count " + LoopLevels.Count);
 			Logging.Debug("Parse Track Timings Count " + Timings.Count);
+
+			ImportProgressBar.Close();
+
 		} // Parse
 	} // LorTrack
 } // VixenModules.SequenceType.LightOrama
