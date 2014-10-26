@@ -33,6 +33,7 @@
 			this.lightOramaProfileLabel = new System.Windows.Forms.Label();
 			this.createMapButton = new System.Windows.Forms.Button();
 			this.convertButton = new System.Windows.Forms.Button();
+			this.deleteButton = new System.Windows.Forms.Button();
 			this.cancelButton = new System.Windows.Forms.Button();
 			this.labelSelectedMap = new System.Windows.Forms.Label();
 			this.lightOramaToVixen3MappingListBox = new System.Windows.Forms.ListBox();
@@ -94,6 +95,18 @@
 			this.convertButton.UseVisualStyleBackColor = true;
 			this.convertButton.Click += new System.EventHandler(this.convertButton_Click);
 			// 
+			// deleteButton
+			// 
+			this.deleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.deleteButton.Enabled = false;
+			this.deleteButton.Location = new System.Drawing.Point(275, 149);
+			this.deleteButton.Name = "deleteButton";
+			this.deleteButton.Size = new System.Drawing.Size(110, 25);
+			this.deleteButton.TabIndex = 15;
+			this.deleteButton.Text = "Delete Mapping";
+			this.deleteButton.UseVisualStyleBackColor = true;
+			this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
+			// 
 			// cancelButton
 			// 
 			this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -101,7 +114,7 @@
 			this.cancelButton.Location = new System.Drawing.Point(519, 149);
 			this.cancelButton.Name = "cancelButton";
 			this.cancelButton.Size = new System.Drawing.Size(90, 25);
-			this.cancelButton.TabIndex = 15;
+			this.cancelButton.TabIndex = 16;
 			this.cancelButton.Text = "Cancel";
 			this.cancelButton.UseVisualStyleBackColor = true;
 			this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
@@ -113,7 +126,7 @@
 			this.labelSelectedMap.Location = new System.Drawing.Point(152, 97);
 			this.labelSelectedMap.Name = "labelSelectedMap";
 			this.labelSelectedMap.Size = new System.Drawing.Size(76, 13);
-			this.labelSelectedMap.TabIndex = 16;
+			this.labelSelectedMap.TabIndex = 17;
 			this.labelSelectedMap.Text = "Selected Map:";
 			// 
 			// LightOramaToVixen3MappingListBox
@@ -124,7 +137,7 @@
 			this.lightOramaToVixen3MappingListBox.Location = new System.Drawing.Point(12, 27);
 			this.lightOramaToVixen3MappingListBox.Name = "LightOramaToVixen3MappingListBox";
 			this.lightOramaToVixen3MappingListBox.Size = new System.Drawing.Size(127, 108);
-			this.lightOramaToVixen3MappingListBox.TabIndex = 17;
+			this.lightOramaToVixen3MappingListBox.TabIndex = 18;
 			this.lightOramaToVixen3MappingListBox.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lightOramaToVixen3MappingListBox_MouseClick);
 			// 
 			// LightOramaProfileTextBox
@@ -166,6 +179,7 @@
 			this.Controls.Add(this.labelSelectedMap);
 			this.Controls.Add(this.cancelButton);
 			this.Controls.Add(this.convertButton);
+			this.Controls.Add(this.deleteButton);
 			this.Controls.Add(this.createMapButton);
 			this.Controls.Add(this.lightOramaProfileTextBox);
 			this.Controls.Add(this.lightOramaProfileLabel);
@@ -188,7 +202,8 @@
 		private System.Windows.Forms.TextBox lightOramaSequenceTextBox;
         private System.Windows.Forms.Label lightOramaProfileLabel;
         private System.Windows.Forms.Button createMapButton;
-        private System.Windows.Forms.Button convertButton;
+		private System.Windows.Forms.Button convertButton;
+		private System.Windows.Forms.Button deleteButton;
 		private System.Windows.Forms.Button cancelButton;
 		private System.Windows.Forms.Label labelSelectedMap;
 		private System.Windows.Forms.ListBox lightOramaToVixen3MappingListBox;

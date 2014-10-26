@@ -16,9 +16,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 		protected internal string FileName { get; private set; }
 
-		protected internal string ProfileName { get; private set; }
-
-		protected internal string ProfilePath { get; private set; }
+		protected internal string ChannelConfigName { get; private set; }
 
 		protected internal string SongFileName { get; private set; }
 
