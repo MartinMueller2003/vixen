@@ -15,7 +15,7 @@ namespace VixenModules.SequenceType.LightOrama
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
 
 		private MultiSelectTreeview treeview;
-		private bool MapExists;
+//		private bool MapExists;
 		private int startingIndex;
 		private LightOramaSequenceData m_parsedLorSequence = null;
 
@@ -48,12 +48,12 @@ namespace VixenModules.SequenceType.LightOrama
 		public List<LorChannelMapping> Mappings { get; set; }
 		public string MappingName { get; set; }
 
-		public LightOramaSequenceImporterChannelMapper(List<LorChannelMapping> mappings, bool mapExists, string mappingName, LightOramaSequenceData parsedLorSequence)
+		public LightOramaSequenceImporterChannelMapper(List<LorChannelMapping> mappings, string mappingName, LightOramaSequenceData parsedLorSequence)
 		{
 			InitializeComponent();
 
 			Mappings = mappings;
-			MapExists = mapExists;
+//			MapExists = mapExists;
 			TextBoxMappingName.Text = mappingName;
 			m_parsedLorSequence = parsedLorSequence;
 
@@ -113,8 +113,6 @@ namespace VixenModules.SequenceType.LightOrama
 			{
 				repeatCount = 1;
 			}
-
-			// Logging.Info("AddVixen3ElementTolightOramaChannel: repeatCount = " + repeatCount + ". checkBoxRGB.Checked = " + checkBoxRGB.Checked + " listViewMapping.Items.Count = " + listViewMapping.Items.Count);
 
 			for (int i = 0; i < repeatCount; i++)
 			{
@@ -230,7 +228,7 @@ namespace VixenModules.SequenceType.LightOrama
 				item.SubItems[(int)mapperColumnId.lorchannelColor].BackColor = (Color)TypeDescriptor.GetConverter(typeof(Color)).ConvertFromString(GetColorName(mapping.ChannelColor));
 
 				// do we have an existing mapping?
-				if (MapExists && mapping.ElementNodeId != Guid.Empty)
+				if (mapping.ElementNodeId != Guid.Empty)
 				{
 					// get access to the existing target node information
 					ElementNode targetNode = VixenSystem.Nodes.GetElementNode(mapping.ElementNodeId);

@@ -39,7 +39,7 @@ namespace VixenModules.SequenceType.LightOrama
 			m_conversionProgressBar = new CoversionProgressForm();
 			m_conversionProgressBar.Show();
 
-			m_conversionProgressBar.SetupProgressBar(0, m_parsedLightOramaSequence.mappings.Count);
+			m_conversionProgressBar.SetupProgressBar(0, m_parsedLightOramaSequence.Mappings.Count);
 
 			m_conversionProgressBar.StatusLineLabel = "Converting Light-O-Rama sequence";
 
@@ -123,7 +123,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 					// translate the effect
 					List<EffectNode> nodeList = effect.translateEffect(vixElement, color);
-					foreach( EffectNode node in nodeList)
+					foreach (EffectNode node in nodeList)
 					{
 						Sequence.InsertData(node);
 					}
@@ -160,6 +160,7 @@ namespace VixenModules.SequenceType.LightOrama
 					continue;
 				} // end no output channel defined
 
+				// get the Lor Channel object
 				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
 				LorRgbChannel lorRgbChannel = m_parsedLightOramaSequence.SequenceObjects[lorChannel.Parents.Single()] as LorRgbChannel;
 				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(channelMapping.ElementNodeId);

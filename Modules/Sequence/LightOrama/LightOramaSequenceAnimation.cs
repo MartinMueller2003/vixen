@@ -68,7 +68,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 			foreach (XElement element in rowElement.Elements().ToList())
 			{
-//				Logging.Info("Element Name: animation.'" + element.Name.ToString() + "'");
+				//				Logging.Info("Element Name: animation.'" + element.Name.ToString() + "'");
 
 				switch (element.Name.ToString())
 				{
@@ -119,8 +119,15 @@ namespace VixenModules.SequenceType.LightOrama
 			Image = (animation.Attribute("image") == null) ? string.Empty : animation.Attribute("image").Value;
 			HideControls = (animation.Attribute("hideControls") == null) ? false : bool.Parse(animation.Attribute("hideControls").Value);
 
+			CoversionProgressForm ImportProgressBar = new CoversionProgressForm();
+			ImportProgressBar.Show();
+			ImportProgressBar.SetupProgressBar(0, animation.Elements().ToList().Count);
+			ImportProgressBar.StatusLineLabel = "Importing Light-O-Rama Track";
+
 			foreach (XElement element in animation.Elements().ToList())
 			{
+				ImportProgressBar.IncrementProgressBar();
+				Application.DoEvents();
 				// Logging.Info("Element Name: animation.'" + element.Name.ToString() + "'");
 
 				switch (element.Name.ToString())
@@ -136,6 +143,8 @@ namespace VixenModules.SequenceType.LightOrama
 						break;
 				} // elementName
 			} // end process each element catagory at the sequence level
+
+			ImportProgressBar.Close();
 		} // parse
 	} // class LorAnimation
 } // VixenModules.SequenceType.LightOrama

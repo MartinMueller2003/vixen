@@ -9,11 +9,14 @@ namespace VixenModules.SequenceType.LightOrama
 {
 	public partial class LightOramaSequenceImporterForm : Form
 	{
+		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
+
 		public ISequence Sequence { get; set; }
 
-		private bool mapExists;
+		//		private bool mapExists;
 		private string m_ImportFile;
-		private List<LorChannelMapping> channelMappings;
+		private List<LorChannelMapping> m_channelMappings;
+		private bool m_createNewMap = true;
 
 		private LightOramaSequenceData parsedLORSequence;
 		private Vixen3SequenceCreator vixen3SequenceCreator;
@@ -23,7 +26,7 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			InitializeComponent();
 
-			channelMappings = new List<LorChannelMapping>();
+			m_channelMappings = new List<LorChannelMapping>();
 
 			// I think this was the correct way to implement this.
 			StaticModuleData = (LightOramaSequenceStaticData)staticModuleData;
@@ -38,20 +41,16 @@ namespace VixenModules.SequenceType.LightOrama
 
 			// we parsed the sequence so go ahead and for now set our ChannelMappings to the parsed data
 			// If the user selects one from the listbox we will make an adjustment.
-			channelMappings = parsedLORSequence.mappings;
+			// channelMappings = parsedLORSequence.mappings;
 
 			// do we have any existing maps?
 			if (StaticModuleData.LightOramaMappings.Count > 0)
 			{
 				LoadMaps();
 			}
-			else
-			{
-				mapExists = false;
-			}
 
 			// set up the channel config name. This is user entered information. It does not come from the sequence file.
-			lightOramaToVixen3MappingTextBox.Text = parsedLORSequence.ChannelConfigName;
+			lightOramaToVixen3MappingTextBox.Text = parsedLORSequence.ChannelConfigFileName;
 		} // LightOramaSequenceImporterForm
 
 		/// <summary>
@@ -59,11 +58,10 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		private void LoadMaps()
 		{
-			mapExists = true;
-
 			// disable the convertButton
 			convertButton.Enabled = false;
 			deleteButton.Enabled = false;
+			m_createNewMap = true;
 
 			PopulateListBox();
 		} // LoadMaps
@@ -91,7 +89,7 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			parsedLORSequence = new LightOramaSequenceData(m_ImportFile);
 
-			lightOramaProfileTextBox.Text = parsedLORSequence.ChannelConfigName;
+			lightOramaChannelConfigurationTextBox.Text = parsedLORSequence.ChannelConfigFileName;
 		} // ParseSequenceData
 
 		/// <summary>
@@ -119,8 +117,22 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="e"></param>
 		private void createMapButton_Click(object sender, EventArgs e)
 		{
-			using (LightOramaSequenceImporterChannelMapper mappingForm = new LightOramaSequenceImporterChannelMapper(channelMappings,
-																													 mapExists,
+			// are we creating a new map?
+			if (true == m_createNewMap)
+			{
+				// see if the user wants to use a channel configuration file
+				importChannelConfiguration();
+
+				// ask the user if they want to pre-create the Vixen elements
+				createElements();
+
+				// ask the user if they want to pre-map the elements
+				createMapping();
+
+				m_channelMappings = parsedLORSequence.Mappings;
+			} // end create a new map
+
+			using (LightOramaSequenceImporterChannelMapper mappingForm = new LightOramaSequenceImporterChannelMapper(m_channelMappings,
 																													 lightOramaToVixen3MappingTextBox.Text,
 																													 parsedLORSequence))
 			{
@@ -139,6 +151,115 @@ namespace VixenModules.SequenceType.LightOrama
 				LoadMaps();
 			} // end using
 		} // createMapButton_Click
+
+		/// <summary>
+		/// Find and parse the channel configuration file
+		/// </summary>
+		private void importChannelConfiguration()
+		{
+			// does this sequence have a channel configuration file defined?
+			if (true == String.IsNullOrEmpty(lightOramaChannelConfigurationTextBox.Text))
+			{
+				// ask the user if there is a channel configuration file available
+				DialogResult dr = MessageBox.Show("Do you wish to specify a Light-O-Rama Channel Configuration for this mapping?", "Channel Configuration", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+				if (DialogResult.Yes == dr)
+				{
+					var dialog = new OpenFileDialog
+					{
+						Multiselect = false,
+						Title = string.Format("Select Light-O-Rama Channel Configuration File"),
+						Filter = "ChanCfg Files (*.lcc)|*.lcc|All Files (*.*)|*.*",
+						RestoreDirectory = true,
+						InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Vixen 3\Sequence"
+					};
+					using (dialog)
+					{
+						if (dialog.ShowDialog() == DialogResult.OK)
+						{
+							lightOramaChannelConfigurationTextBox.Text = dialog.FileName;
+						}
+					}
+				} // yes the user wants to specify a channel configuration file
+			} // end ask the user if they want to specify a channel configuration file
+
+			// is a channel confiig file specified?
+			if (false == String.IsNullOrEmpty(lightOramaChannelConfigurationTextBox.Text))
+			{
+				// save the file name
+				parsedLORSequence.ChannelConfigFileName = lightOramaChannelConfigurationTextBox.Text;
+
+				// parse the file
+				parsedLORSequence.ParseChanConfigFile();
+			} // end parse the channel config file
+		} // importChanCfg
+
+		/// <summary>
+		/// Create V3 elements for any LOR channels that do not have an existing element. Create color handling filters at the same time.
+		/// </summary>
+		private void createElements()
+		{
+			do
+			{
+				// ask if we should create elements
+				DialogResult dr = MessageBox.Show("Would you like Vixen to automatically create Vixen elements that correspond to your LOR channels?",
+													  "Create Elements?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+				if (DialogResult.Yes != dr)
+				{
+					// user does not want us to create the elements
+					break;
+				} // end ask about creating the vixen elements
+
+				// make sure the element names are good. LOR allows duplicate names
+				if (false == parsedLORSequence.CleanUpDuplicates())
+				{
+					// cannot continue. Move to manual processing mode
+					break;
+				} // end failed to resolve the existance of duplicates in the element names
+
+				// process all of the top level objects
+				foreach (ILorObject lorObject in parsedLORSequence.SequenceObjects.Values.Where(x => x.Parents.Count == 0).ToList())
+				{
+					// this will add the LOR object tree to the element tree
+					parsedLORSequence.addLorObjectToElementList(lorObject);
+				} // end process elements
+			} while (false);
+		} // createElements
+
+		/// <summary>
+		/// automatically map all of the elements and LOR channels that have matching names
+		/// </summary>
+		private void createMapping()
+		{
+			UInt64 mappingCount = 0;
+			do
+			{
+				// ask if we should map elements
+				DialogResult dr = MessageBox.Show("Would you like Vixen to automatically map Vixen elements that correspond to your LOR channels?",
+												  "MAP Elements?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+				if (DialogResult.Yes != dr)
+				{
+					// user does not want us to create the elements
+					break;
+				} // end ask about creating the vixen elements
+
+				// make sure the element names are good. LOR allows duplicate names
+				if (false == parsedLORSequence.CleanUpDuplicates())
+				{
+					// cannot continue. Move to manual processing mode
+					break;
+				} // end failed to resolve the existance of duplicates in the element names
+
+				// process all of the top level objects
+				foreach (ILorObject lorObject in parsedLORSequence.SequenceObjects.Values.Where(x => x.Parents.Count == 0).ToList())
+				{
+					// this will add the LOR object tree to the element tree
+					mappingCount += parsedLORSequence.addLorObjectToMap(lorObject);
+				} // end process elements
+
+				MessageBox.Show("LOR Auto Map has updated " + mappingCount + " elements", "Map Vixen Elements");
+
+			} while (false);
+		} // createMapping
 
 		/// <summary>
 		/// User decided to not continue
@@ -189,11 +310,11 @@ namespace VixenModules.SequenceType.LightOrama
 			// check to see if the mapping table is there.
 			if (StaticModuleData.LightOramaMappings.Count > 0)
 			{
-				DialogResult dr =  MessageBox.Show("Are you sure you want to delete '" + lightOramaToVixen3MappingTextBox.Text + "'", 
-													"Are You Sure?", 
+				DialogResult dr = MessageBox.Show("Are you sure you want to delete '" + lightOramaToVixen3MappingTextBox.Text + "'",
+													"Are You Sure?",
 													MessageBoxButtons.YesNo,
 													MessageBoxIcon.Question);
-				if( DialogResult.Yes == dr)
+				if (DialogResult.Yes == dr)
 				{
 					StaticModuleData.LightOramaMappings.Remove(lightOramaToVixen3MappingTextBox.Text);
 
@@ -223,11 +344,12 @@ namespace VixenModules.SequenceType.LightOrama
 
 				// do not use the static mapping use the parsed sequence mapping
 				// because the user must want to start over.
-				channelMappings = parsedLORSequence.mappings;
+				m_channelMappings = parsedLORSequence.Mappings;
 
 				// disable the convert button because we do not have a map selected
 				convertButton.Enabled = false;
 				deleteButton.Enabled = false;
+				m_createNewMap = true;
 				createMapButton.Text = "Create New Map";
 			}
 			else
@@ -235,11 +357,12 @@ namespace VixenModules.SequenceType.LightOrama
 				lightOramaToVixen3MappingTextBox.Text = lightOramaToVixen3MappingListBox.SelectedItem.ToString();
 
 				// user selected a pre-existing mapping so use it now.
-				channelMappings = StaticModuleData.LightOramaMappings[lightOramaToVixen3MappingListBox.SelectedItem.ToString()];
+				m_channelMappings = StaticModuleData.LightOramaMappings[lightOramaToVixen3MappingListBox.SelectedItem.ToString()];
 
 				// user selected a map so enable the convert button
 				convertButton.Enabled = true;
 				deleteButton.Enabled = true;
+				m_createNewMap = false;
 				createMapButton.Text = "Edit Selected Map";
 			}
 		} // lightOramaToVixen3MappingListBox_MouseClick

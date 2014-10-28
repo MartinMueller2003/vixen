@@ -60,9 +60,19 @@ namespace VixenModules.SequenceType.LightOrama
 						foreach (XElement channelGroup in element.Elements("channelGroup").ToList())
 						{
 							UInt64 childIndex = (null == channelGroup.Attribute("savedIndex")) ? UInt64.MaxValue : UInt64.Parse(channelGroup.Attribute("savedIndex").Value);
-							Children.Add(childIndex);
-							// mark the child as having a parent
-							m_sequenceObjects[childIndex].Parents.Add(Index);
+
+							// do we already know about this child (reparse)?
+							if (0 == Children.Where(x => x == childIndex).ToList().Count)
+							{
+								Children.Add(childIndex);
+							} // end link parent to child
+
+							// do the child already know about this parent (reparse)?
+							if (0 == m_sequenceObjects[childIndex].Parents.Where(x => x == Index).ToList().Count)
+							{
+								// mark the child as having a parent
+								m_sequenceObjects[childIndex].Parents.Add(Index);
+							} // end link child to parent
 						}
 						break;
 

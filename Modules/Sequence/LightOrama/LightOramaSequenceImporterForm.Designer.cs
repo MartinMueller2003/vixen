@@ -30,14 +30,14 @@
 		{
 			this.sequenceToConvertLabel = new System.Windows.Forms.Label();
 			this.lightOramaSequenceTextBox = new System.Windows.Forms.TextBox();
-			this.lightOramaProfileLabel = new System.Windows.Forms.Label();
+			this.lightOramaChannelConfigLabel = new System.Windows.Forms.Label();
 			this.createMapButton = new System.Windows.Forms.Button();
 			this.convertButton = new System.Windows.Forms.Button();
 			this.deleteButton = new System.Windows.Forms.Button();
 			this.cancelButton = new System.Windows.Forms.Button();
 			this.labelSelectedMap = new System.Windows.Forms.Label();
 			this.lightOramaToVixen3MappingListBox = new System.Windows.Forms.ListBox();
-			this.lightOramaProfileTextBox = new System.Windows.Forms.TextBox();
+			this.lightOramaChannelConfigurationTextBox = new System.Windows.Forms.TextBox();
 			this.lightOramaToVixen3MappingTextBox = new System.Windows.Forms.TextBox();
 			this.labelChannelMaps = new System.Windows.Forms.Label();
 			this.SuspendLayout();
@@ -61,15 +61,15 @@
 			this.lightOramaSequenceTextBox.Size = new System.Drawing.Size(454, 20);
 			this.lightOramaSequenceTextBox.TabIndex = 5;
 			// 
-			// LightOramaProfileLabel
+			// lightOramaChannelConfigLabel
 			// 
-			this.lightOramaProfileLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.lightOramaProfileLabel.AutoSize = true;
-			this.lightOramaProfileLabel.Location = new System.Drawing.Point(152, 54);
-			this.lightOramaProfileLabel.Name = "LightOramaProfileLabel";
-			this.lightOramaProfileLabel.Size = new System.Drawing.Size(77, 13);
-			this.lightOramaProfileLabel.TabIndex = 7;
-			this.lightOramaProfileLabel.Text = "Light-O-Rama Profile:";
+			this.lightOramaChannelConfigLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.lightOramaChannelConfigLabel.AutoSize = true;
+			this.lightOramaChannelConfigLabel.Location = new System.Drawing.Point(152, 54);
+			this.lightOramaChannelConfigLabel.Name = "lightOramaChannelConfigLabel";
+			this.lightOramaChannelConfigLabel.Size = new System.Drawing.Size(77, 13);
+			this.lightOramaChannelConfigLabel.TabIndex = 7;
+			this.lightOramaChannelConfigLabel.Text = "Light-O-Rama Channel Configuration File:";
 			// 
 			// createMapButton
 			// 
@@ -140,14 +140,14 @@
 			this.lightOramaToVixen3MappingListBox.TabIndex = 18;
 			this.lightOramaToVixen3MappingListBox.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lightOramaToVixen3MappingListBox_MouseClick);
 			// 
-			// LightOramaProfileTextBox
+			// lightOramaChannelConfigurationTextBox
 			// 
-			this.lightOramaProfileTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.lightOramaProfileTextBox.Location = new System.Drawing.Point(155, 70);
-			this.lightOramaProfileTextBox.Name = "LightOramaProfileTextBox";
-			this.lightOramaProfileTextBox.ReadOnly = true;
-			this.lightOramaProfileTextBox.Size = new System.Drawing.Size(454, 20);
-			this.lightOramaProfileTextBox.TabIndex = 8;
+			this.lightOramaChannelConfigurationTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.lightOramaChannelConfigurationTextBox.Location = new System.Drawing.Point(155, 70);
+			this.lightOramaChannelConfigurationTextBox.Name = "lightOramaChannelConfigurationTextBox";
+			this.lightOramaChannelConfigurationTextBox.ReadOnly = true;
+			this.lightOramaChannelConfigurationTextBox.Size = new System.Drawing.Size(454, 20);
+			this.lightOramaChannelConfigurationTextBox.TabIndex = 8;
 			// 
 			// LightOramaToVixen3MappingTextBox
 			// 
@@ -181,8 +181,8 @@
 			this.Controls.Add(this.convertButton);
 			this.Controls.Add(this.deleteButton);
 			this.Controls.Add(this.createMapButton);
-			this.Controls.Add(this.lightOramaProfileTextBox);
-			this.Controls.Add(this.lightOramaProfileLabel);
+			this.Controls.Add(this.lightOramaChannelConfigurationTextBox);
+			this.Controls.Add(this.lightOramaChannelConfigLabel);
 			this.Controls.Add(this.lightOramaSequenceTextBox);
 			this.Controls.Add(this.sequenceToConvertLabel);
 			this.DoubleBuffered = true;
@@ -200,14 +200,14 @@
 
         private System.Windows.Forms.Label sequenceToConvertLabel;
 		private System.Windows.Forms.TextBox lightOramaSequenceTextBox;
-        private System.Windows.Forms.Label lightOramaProfileLabel;
+        private System.Windows.Forms.Label lightOramaChannelConfigLabel;
         private System.Windows.Forms.Button createMapButton;
 		private System.Windows.Forms.Button convertButton;
 		private System.Windows.Forms.Button deleteButton;
 		private System.Windows.Forms.Button cancelButton;
 		private System.Windows.Forms.Label labelSelectedMap;
 		private System.Windows.Forms.ListBox lightOramaToVixen3MappingListBox;
-		private System.Windows.Forms.TextBox lightOramaProfileTextBox;
+		private System.Windows.Forms.TextBox lightOramaChannelConfigurationTextBox;
 		private System.Windows.Forms.TextBox lightOramaToVixen3MappingTextBox;
 		private System.Windows.Forms.Label labelChannelMaps;
 	}

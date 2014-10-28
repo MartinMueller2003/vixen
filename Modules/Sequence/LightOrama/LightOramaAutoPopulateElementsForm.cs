@@ -121,142 +121,25 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			do
 			{
-				var duplicates = m_parsedLorSequence.SequenceObjects.GroupBy(x => x.Value.Name).Where(g => g.Count() > 1).ToDictionary(x=>x.Key, y=>y.Count());
-				if (0 != duplicates.Count)
+				// ask if we should create elements
+				if (false == m_parsedLorSequence.CleanUpDuplicates())
 				{
-					DialogResult result = MessageBox.Show("LOR Auto Populate Elements has found duplicate elements and cannot continue. Please see the logs for a list of duplicates that must be resolved prior to conversion.", "WARNING: Conversion Naming Error", MessageBoxButtons.YesNo);
-					foreach (var duplicate in duplicates)
-					{
-						foreach( var kvp in m_parsedLorSequence.SequenceObjects.Where(x => x.Value.Name == duplicate.Key) )
-						{
-							Logging.Error("Found Duplicate LOR element '" + duplicate.Key + "' of type '" +kvp.Value.GetType().ToString() + "'");
-						}
-					}
-
-					// does the user want us to modify the channel names?
-					if (result == System.Windows.Forms.DialogResult.No)
-					{
-						break;
-					}
-
-					while (0 != duplicates.Count)
-					{
-						foreach (var duplicate in duplicates)
-						{
-							foreach (var kvp in m_parsedLorSequence.SequenceObjects.Where(x => x.Value.Name == duplicate.Key))
-							{
-								// is this a leaf node
-								if((kvp.Value.GetType() == typeof(LorRgbChannel)) || (kvp.Value.GetType() == typeof(LorChannel)))
-								{
-									continue;
-								} // end skip leaf node
-
-								int currentCount = 0;
-								string currentName = duplicate.Key + " (" + currentCount++ + ")";
-								// do not modify the names of the leaf objects. They need to correspond to the names in the channel list
-
-								while (0 != m_parsedLorSequence.SequenceObjects.Where(x => x.Value.Name == currentName).ToList().Count)
-								{
-									currentName = duplicate.Key + " (" + currentCount++ + ")";
-								} // end search for a unique name.
-
-								// we now have a unique name. set the element nname
-								kvp.Value.Name = currentName;
-
-								// names have been modified. Need to rebuild the lists and start over
-								break;
-							}
-
-							// names have been modified. Need to rebuild the lists and start over
-							break;
-						}
-
-						duplicates = m_parsedLorSequence.SequenceObjects.GroupBy(x => x.Value.Name).Where(g => g.Count() > 1).ToDictionary(x => x.Key, y => y.Count());
-					}
-
-				}
+					// cannot continue. Move to manual processing mode
+					break;
+				} // end failed to resolve the existance of duplicates in the element names
 
 				int startingElementCount = VixenSystem.Nodes.GetAllNodes().Count();
 
 				// process the nodes that are currently selected
 				foreach (TreeNode node in treeViewLorChannels.SelectedNodes)
 				{
-					addLorObjectToElementList(m_parsedLorSequence.SequenceObjects[Convert.ToUInt64(node.Name)]);
+					m_parsedLorSequence.addLorObjectToElementList(m_parsedLorSequence.SequenceObjects[Convert.ToUInt64(node.Name)]);
 				} // end process selected nodes
 
 				MessageBox.Show("LOR Auto Populate has created " + (VixenSystem.Nodes.GetAllNodes().Count() - startingElementCount) + " elements", "Create Vixen Elements");
 				Logging.Info("LOR Auto Populate has created " + (VixenSystem.Nodes.GetAllNodes().Count() - startingElementCount) + " elements");
 			} while (false);
 		} // buttonCreateElements_Click
-
-		/// <summary>
-		/// Add the node and its children to the list of elements
-		/// </summary>
-		/// <param name="lorObject"></param>
-		private void addLorObjectToElementList(ILorObject lorObject)
-		{
-			// does this object have any children?
-			if ((0 != lorObject.Children.Count) && (lorObject.GetType() != typeof(LorRgbChannel)))
-			{
-				// process any children the node may have
-				foreach (UInt64 childIndex in lorObject.Children)
-				{
-					addLorObjectToElementList(m_parsedLorSequence.SequenceObjects[childIndex]);
-				} // end process the children
-			}
-			// does this object exist in the Vixen Element list?
-			else if (null == VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name))
-			{
-				CreateElementNodeAndParentTree(lorObject);
-			}
-		} // addLorObjectToElementList
-
-		/// <summary>
-		/// Create the parent tree for this node. Node MUST be a leaf node
-		/// </summary>
-		/// <param name="node"></param>
-		/// <returns>The element node that was created</returns>
-		private ElementNode CreateElementNodeAndParentTree(ILorObject lorObject)
-		{
-			// find the Vixen Element associated with this LOR Channel
-			ElementNode response = VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name);
-
-			// does this lor object already exist in the Vixen tree?
-			if (null == response)
-			{
-				// no it does not exist. Create its parents and then create it
-				foreach (UInt64 parentId in lorObject.Parents)
-				{
-					// get the parent object
-					ILorObject parentObject = m_parsedLorSequence.SequenceObjects[parentId];
-
-					// get the element for this parent
-					ElementNode parentElement = CreateElementNodeAndParentTree(parentObject);
-
-					// have we already created our element?
-					if (null == response)
-					{
-						// create a new node and bind it to the parent
-						response = ElementNodeService.Instance.CreateSingle(parentElement, lorObject.Name);
-					}
-					else
-					{
-						// bind the parent node to the existing child node
-						VixenSystem.Nodes.AddChildToParent(response, parentElement);
-					}
-				} // end process parents
-
-				// if there were no parents, then just make a top level node
-				if (null == response)
-				{
-					// create a new node and bind it to the parent
-					response = ElementNodeService.Instance.CreateSingle(null, lorObject.Name);
-				} // end no parents
-			} // end this Vixen node did not exist
-
-			// return the node we created
-			return response;
-		} // CreateElementNodeParentTree
 
 		/// <summary>
 		/// Automatically map the selected LOR channels to the V3 Elements of the same name
@@ -271,79 +154,11 @@ namespace VixenModules.SequenceType.LightOrama
 			// process the nodes that are currently selected
 			foreach (TreeNode node in treeViewLorChannels.SelectedNodes)
 			{
-				addLorObjectToMap(m_parsedLorSequence.SequenceObjects[Convert.ToUInt64(node.Name)]);
+				m_mappingCount += m_parsedLorSequence.addLorObjectToMap(m_parsedLorSequence.SequenceObjects[Convert.ToUInt64(node.Name)]);
 			} // end process selected nodes
 
 			MessageBox.Show("LOR Auto Map has updated " + m_mappingCount + " elements", "Map Vixen Elements");
 		} // buttonMapElements_Click
-
-		/// <summary>
-		/// Map the leaf objects to Vixen elements of the same name
-		/// </summary>
-		/// <param name="lorObject"></param>
-		private void addLorObjectToMap(ILorObject lorObject)
-		{
-			ElementNode element = null;
-
-			// v3Destination
-			if ("Mini Tree 1" == lorObject.Name)
-			{
-				Logging.Error("lorObject.Name: '" + lorObject.Name + "'");
-			}
-
-			// does this object have any children?
-			if ((0 != lorObject.Children.Count) && (lorObject.GetType() != typeof(LorRgbChannel)))
-			{
-				// process any children the node may have
-				foreach (UInt64 childIndex in lorObject.Children)
-				{
-					addLorObjectToMap(m_parsedLorSequence.SequenceObjects[childIndex]);
-				} // end process the children
-			}
-			// does this object exist in the Vixen Element list?
-			else if (null != (element = VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name)))
-			{
-				// v3Destination
-				if ("Mini Tree 1" == element.ToString())
-				{
-					Logging.Error("element.Element: '" + element.Element + "'");
-					Logging.Error("element.Element.Name: '" + element.Element.Name + "'");
-				}
-
-				if (null == element.Element)
-				{
-					Logging.Error("element.Element: '" + element.Element + "'");
-				}
-				// is this an RGB channel?
-				if (lorObject.GetType() == typeof(LorRgbChannel))
-				{
-					// process the children
-					foreach (UInt64 childIndex in lorObject.Children)
-					{
-						LorChannel rgbChild = m_parsedLorSequence.SequenceObjects[childIndex] as LorChannel;
-						LorChannelMapping mapping = m_mappings.FirstOrDefault(x => x.ChannelName == rgbChild.Name);
-						if (null != mapping)
-						{
-							m_mappingCount++;
-							mapping.DestinationColor = rgbChild.Color;
-							mapping.ColorMixing = true;
-							mapping.ElementNodeId = element.Id;
-						} // end map exists
-					} // end RGB channels
-				} // end RGB leaf
-				else
-				{
-					// get the mapping entry for this element
-					LorChannelMapping mapping = m_mappings.FirstOrDefault(x => x.ChannelName == lorObject.Name);
-					if (null != mapping)
-					{
-						mapping.DestinationColor = (lorObject as LorChannel).Color;
-						mapping.ColorMixing = false;
-						mapping.ElementNodeId = element.Id;
-					} // end map exists
-				} // end there is an element for this lor channel
-			} // end matching element exists
-		} // addLorObjectToMap
 
 		/// <summary>
 		/// Done clean up and close
