@@ -82,97 +82,96 @@ namespace VixenModules.SequenceType.LightOrama
 		} // createTimedSequence
 
 		/// <summary>
-		/// Convert parsedLightOramaSequence into a V3 sequence
+		/// Convert the LOR sequence to a vixen sequence based on the current mappings
 		/// </summary>
 		private void importSequenceData()
 		{
-			// for each channel in the LightOrama sequence
-			foreach (LorChannelMapping channelMapping in m_mappings.Where(x => x.ColorMixing == false))
+			int errorCount = 0;
+
+			// get a list of unique destinations
+			IEnumerable<LorChannelMapping> elementMappings = m_mappings.Where(x => x.ElementNodeId != Guid.Empty).GroupBy(x => x.ElementNodeId).Select(g => g.First()).ToList();
+
+			m_conversionProgressBar.SetupProgressBar(0, elementMappings.ToList().Count);
+
+			int currentMappingNum = 0;
+			foreach (LorChannelMapping elementMapping in elementMappings)
 			{
-				m_conversionProgressBar.IncrementProgressBar();
+				m_conversionProgressBar.UpdateProgressBar(currentMappingNum++);
 				Application.DoEvents();
 
-				// is this channel defined in the LOR channel list?
-				if (false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)))
-				{
-					// channel is not in our list
-					Logging.Error("Channel " + channelMapping.ChannelNumber + " in the mapping table does not exist in the LOR channel table.");
-					continue;
-				} // end not a valid channel
-
-				// is this an unmapped output channel?
-				if (Guid.Empty == channelMapping.ElementNodeId)
-				{
-					// no output channel. Move on to the next channel
-					continue;
-				} // end no output channel defined
-
-				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
-				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(channelMapping.ElementNodeId);
+				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(elementMapping.ElementNodeId);
 				if (null == vixElement)
 				{
-					Logging.Error("Vixen Element " + channelMapping.ElementNodeId + " could not be located.");
+					Logging.Error("Vixen Element " + elementMapping.ElementNodeId + " could not be located for mapping " + elementMapping.ChannelName);
+					errorCount++;
 					continue;
 				}
 
-				// translate each effect associated with this channel
-				foreach (ILorEffect effect in lorChannel.Effects)
+				// get a list of the channels mapped to this element
+				IEnumerable<LorChannelMapping> channelMappings = m_mappings.Where(x => x.ElementNodeId == elementMapping.ElementNodeId).ToList();
+
+				// process the effects on these channels
+				if( true == elementMapping.ColorMixing)
 				{
-					// Get the output color
-					Color color = (Color.Empty == channelMapping.DestinationColor) ? lorChannel.Color : channelMapping.DestinationColor;
-
-					// translate the effect
-					List<EffectNode> nodeList = effect.translateEffect(vixElement, color);
-					foreach (EffectNode node in nodeList)
-					{
-						Sequence.InsertData(node);
-					}
-				} // end translate the effect
-			} // end process each channel
-
-			// now import the color mixing channels
-			importSequenceDataRGB();
-		} // end importSequenceData
+					ConsolidateEffects(vixElement, channelMappings);
+				}
+				else
+				{
+					ProcessEffects(vixElement, channelMappings);
+				}
+			} // end process each mapped element
+		} // importSequenceData
 
 		/// <summary>
-		/// Convert parsedLightOramaSequence into a V3 sequence
+		/// Examine the effects on the non color mixing channels and convert them.
 		/// </summary>
-		private void importSequenceDataRGB()
+		/// <param name="vixElement"></param>
+		/// <param name="channelMappings"></param>
+		public void ProcessEffects(ElementNode vixElement, IEnumerable<LorChannelMapping> channelMappings)
 		{
-			// for each color mixing channel in the LightOrama sequence
-			foreach (LorChannelMapping channelMapping in m_mappings.Where(x => x.ColorMixing == true))
+			// process the effects for each child
+			foreach (LorChannelMapping sourceChannelMapping in channelMappings)
 			{
-				m_conversionProgressBar.IncrementProgressBar();
-				Application.DoEvents();
-
-				// is this channel defined in the LOR channel list?
-				if (false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(Convert.ToUInt64(channelMapping.ChannelNumber)))
+				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[sourceChannelMapping.ChannelNumber] as LorChannel;
+				foreach (ILorEffect sampleEffect in lorChannel.Effects.Where(x => (false == x.HasBeenProcessed) && (x.StartTimeMs < x.EndTimeMs)))
 				{
-					// channel is not in our list
-					Logging.Error("Channel " + channelMapping.ChannelNumber + " in the mapping table does not exist in the LOR channel table.");
-					continue;
-				} // end not a valid channel
+					Sequence.InsertData(sampleEffect.translateEffect(vixElement, sourceChannelMapping.DestinationColor));
+				} // end list of effects
+			} // end for each child 
+		} // ConsolidateEffects
 
-				// is this an unmapped output channel?
-				if (Guid.Empty == channelMapping.ElementNodeId)
+		/// <summary>
+		/// Examine the effects on the color mixing channels and consolidate them.
+		/// </summary>
+		/// <param name="vixElement"></param>
+		/// <param name="channelMappings"></param>
+		public void ConsolidateEffects(ElementNode vixElement, IEnumerable<LorChannelMapping> channelMappings)
+		{
+			// process the effects for each child
+			foreach (LorChannelMapping sourceChannelMapping in channelMappings)
+			{
+				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[sourceChannelMapping.ChannelNumber] as LorChannel;
+				foreach (ILorEffect sampleEffect in lorChannel.Effects.Where(x => (false == x.HasBeenProcessed) && (x.StartTimeMs < x.EndTimeMs)))
 				{
-					// no output channel. Move on to the next channel
-					continue;
-				} // end no output channel defined
+					List<ILorEffect> effectList = new List<ILorEffect>();
 
-				// get the Lor Channel object
-				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[Convert.ToUInt64(channelMapping.ChannelNumber)] as LorChannel;
-				LorRgbChannel lorRgbChannel = m_parsedLightOramaSequence.SequenceObjects[lorChannel.Parents.Single()] as LorRgbChannel;
-				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(channelMapping.ElementNodeId);
-				if (null == vixElement)
-				{
-					Logging.Error("Vixen Element " + channelMapping.ElementNodeId + " could not be located.");
-					continue;
-				} // end could not locate the V3 element
+					// process this effect for each channel
+					foreach (LorChannelMapping effectSourceChannelMapping in channelMappings)
+					{
+						LorChannel effectSourceChannel = m_parsedLightOramaSequence.SequenceObjects[effectSourceChannelMapping.ChannelNumber] as LorChannel;
+						// find peer effects
+						foreach (ILorEffect effect in effectSourceChannel.Effects.Where(x => (false == x.HasBeenProcessed) && (x.StartTimeMs == sampleEffect.StartTimeMs) && (x.EndTimeMs == sampleEffect.EndTimeMs) && (x.RampUp == sampleEffect.RampUp) && (x.RampDown == sampleEffect.RampDown) && (x.GetType() == sampleEffect.GetType())))
+						{
+							// add the color to the effect for mixing
+							effect.Color = effectSourceChannel.Color;
+							effectList.Add(effect);
+						} // end collect peer effects
+					} // end collect effect from a child
 
-				// translate each effect associated with this channel
-				lorRgbChannel.ConsolidateEffects(Sequence, vixElement);
-			} // end process each channel
-		} // end importSequenceDataRGB
+					ILorEffect finalEffect = effectList.First().CombineEffects(effectList);
+					Sequence.InsertData(finalEffect.translateEffect(vixElement, finalEffect.Color));
+				} // end main list of effects
+			} // end for each child 
+		} // ConsolidateEffects
 	} // Vixen3SequenceCreator
 } // VixenModules.SequenceType.LightOrama

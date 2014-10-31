@@ -26,7 +26,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		List<LorChannelMapping> m_mappings = new List<LorChannelMapping>();
 
-		private UInt64 m_mappingCount = 0;
+		private int m_mappingCount = 0;
 
 		public LightOramaAutoPopulateElementsForm(LightOramaSequenceData parsedLorSequence, List<LorChannelMapping> mappings)
 		{

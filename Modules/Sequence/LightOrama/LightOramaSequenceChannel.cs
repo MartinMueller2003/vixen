@@ -125,7 +125,7 @@ namespace VixenModules.SequenceType.LightOrama
 			do
 			{
 				// do we already have an element ID or we are an RGB channel?
-				if( (Guid.Empty != ElementId) || (UInt64.MaxValue != RgbChannel) )
+				if ((Guid.Empty != ElementId) || (UInt64.MaxValue != RgbChannel))
 				{
 					// just go away
 					break;
@@ -176,5 +176,40 @@ namespace VixenModules.SequenceType.LightOrama
 
 			} while (false);
 		} // CreateVixenElement
+
+		/// <summary>
+		/// Update the mappings for this channel
+		/// </summary>
+		/// <param name="dataSet"></param>
+		/// <returns></returns>
+		public int AddToMappings(LightOramaSequenceData sequence)
+		{
+			int response = 0;
+			do
+			{
+				// is this an RGB channel?
+				if( UInt64.MaxValue != RgbChannel)
+				{
+					// ignore the RGB channels
+					break;
+				} // end channel is in RGB mode
+
+				LorChannelMapping mapping = sequence.Mappings.FirstOrDefault(x => x.ChannelName == Name);
+				if (null == mapping)
+				{
+					mapping = new LorChannelMapping(Name, Color, Index, ElementId, Color, false);
+					sequence.Mappings.Add(mapping);
+				}
+				else
+				{
+					mapping.DestinationColor = Color;
+					mapping.ColorMixing = false;
+					mapping.ElementNodeId = ElementId;
+				}
+				response++;
+			} while (false);
+
+			return response;
+		} // AddToMappings
 	} // LorChannel
 } // VixenModules.SequenceType.LightOrama

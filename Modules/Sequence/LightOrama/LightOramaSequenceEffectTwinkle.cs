@@ -27,15 +27,6 @@ namespace VixenModules.SequenceType.LightOrama
 		public LorEffectTwinkle() { }
 
 		/// <summary>
-		/// Parse the xml stream
-		/// </summary>
-		/// <param name="effectElement"></param>
-		public void Parse(XElement effectElement)
-		{
-			base.Parse(effectElement);
-		} // Parse
-
-		/// <summary>
 		/// Translate an effect into a V3 effect
 		/// </summary>
 		/// <param name="element"></param>

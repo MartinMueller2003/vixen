@@ -230,15 +230,6 @@ namespace VixenModules.SequenceType.LightOrama
 				{
 					// get access to the existing target node information
 					ElementNode targetNode = VixenSystem.Nodes.GetElementNode(mapping.ElementNodeId);
-					if (null == targetNode.Element)
-					{
-						Logging.Info("LightOramaSequenceImporterChannelMapper_Load: mapping.ChannelName " + mapping.ChannelName);
-						Logging.Info("LightOramaSequenceImporterChannelMapper_Load: mapping.ElementNodeId " + mapping.ElementNodeId);
-						Logging.Info("LightOramaSequenceImporterChannelMapper_Load: targetNode " + targetNode.ToString());
-//						Logging.Info("targetNode.Element " + targetNode.Element.ToString());
-//						Logging.Info("targetNode.Element.Name " + targetNode.Element.Name.ToString());
-						MessageBox.Show("LightOramaSequenceImporterChannelMapper_Load: Element is null");
-					}
 
 					// v3Destination
 					item.SubItems.Add(targetNode.Element.Name);

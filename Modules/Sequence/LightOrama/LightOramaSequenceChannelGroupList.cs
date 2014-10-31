@@ -126,5 +126,15 @@ namespace VixenModules.SequenceType.LightOrama
 
 			} while (false);
 		} // CreateVixenElement
+
+		/// <summary>
+		/// Update the mappings for this channel
+		/// </summary>
+		/// <param name="dataSet"></param>
+		/// <returns></returns>
+		public int AddToMappings(LightOramaSequenceData sequence)
+		{
+			return 0;
+		} // AddToMappings
 	} // LorChannelGroupList
 } // VixenModules.SequenceType.LightOrama

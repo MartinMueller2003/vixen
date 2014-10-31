@@ -93,38 +93,6 @@ namespace VixenModules.SequenceType.LightOrama
 		} // Parse
 
 		/// <summary>
-		/// Examine the effects on the color mixing channels and consolidate them.
-		/// </summary>
-		public void ConsolidateEffects(ISequence Sequence, ElementNode vixElement)
-		{
-			// process the effects for each child
-			foreach (UInt64 childIndex in Children)
-			{
-				LorChannel child = m_sequenceObjects[childIndex] as LorChannel;
-				foreach (ILorEffect sampleEffect in child.Effects.Where(x => (false == x.HasBeenProcessed) && (x.StartTimeMs < x.EndTimeMs)))
-				{
-					List<ILorEffect> effectList = new List<ILorEffect>();
-
-					// process this effect for each child
-					foreach (UInt64 effectChildIndex in Children)
-					{
-						LorChannel effectChild = m_sequenceObjects[effectChildIndex] as LorChannel;
-						// find peer effects
-						foreach (ILorEffect effect in effectChild.Effects.Where(x => (false == x.HasBeenProcessed) && (x.StartTimeMs == sampleEffect.StartTimeMs) && (x.EndTimeMs == sampleEffect.EndTimeMs) && (x.RampUp == sampleEffect.RampUp) && (x.RampDown == sampleEffect.RampDown) && (x.GetType() == sampleEffect.GetType())))
-						{
-							// add the color to the effect for mixing
-							effect.Color = effectChild.Color;
-							effectList.Add(effect);
-						} // end collect peer effects
-					} // end collect effect from a child
-
-					ILorEffect finalEffect = effectList.First().CombineEffects(effectList);
-					Sequence.InsertData(finalEffect.translateEffect(vixElement, finalEffect.Color));
-				} // end main list of effects
-			} // end for each child 
-		} // ConsolidateEffects
-
-		/// <summary>
 		/// create this element in a tree of elements. Create any parents as needed
 		/// </summary>
 		/// <param name="sequence"></param>
@@ -192,5 +160,37 @@ namespace VixenModules.SequenceType.LightOrama
 			} while (false);
 		} // CreateVixenElement
 
+		/// <summary>
+		/// Update the mappings for this channel
+		/// </summary>
+		/// <param name="dataSet"></param>
+		/// <returns></returns>
+		public int AddToMappings(LightOramaSequenceData sequence)
+		{
+			// process the children
+			foreach (UInt64 childIndex in Children)
+			{
+				LorChannel rgbChild = sequence.SequenceObjects[childIndex] as LorChannel;
+				LorChannelMapping mapping = sequence.Mappings.FirstOrDefault(x => x.ChannelName == rgbChild.Name);
+				if (null == mapping)
+				{
+					mapping = new LorChannelMapping(rgbChild.Name,
+													rgbChild.Color,
+													rgbChild.Index,
+													ElementId,
+													rgbChild.Color,
+													true);
+					sequence.Mappings.Add(mapping);
+				}
+				else
+				{
+					mapping.DestinationColor = rgbChild.Color;
+					mapping.ColorMixing = true;
+					mapping.ElementNodeId = ElementId;
+				}
+			} // end RGB channels
+
+			return Children.Count;
+		} // AddToMappings
 	} // LorRgbChannel
 } // VixenModules.SequenceType.LightOrama

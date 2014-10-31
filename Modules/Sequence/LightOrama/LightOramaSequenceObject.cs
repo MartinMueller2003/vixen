@@ -26,7 +26,8 @@ namespace VixenModules.SequenceType.LightOrama
 		List<UInt64> Parents { get; }
 
 		void Parse(XElement element);
-		void CreateVixenElement( LightOramaSequenceData dataSet);
+		void CreateVixenElement(LightOramaSequenceData dataSet);
+		int AddToMappings(LightOramaSequenceData dataSet);
 	} // ILorObject
 
 } // VixenModules.SequenceType.LightOrama

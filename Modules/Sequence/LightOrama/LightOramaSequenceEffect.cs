@@ -100,30 +100,5 @@ namespace VixenModules.SequenceType.LightOrama
 			StartIntensity = (null == effectElement.Attribute("startIntensity")) ? 0 : Convert.ToUInt64(Double.Parse(effectElement.Attribute("startIntensity").Value) * 2.55);
 			EndIntensity = (null == effectElement.Attribute("endIntensity")) ? 0 : Convert.ToUInt64(Double.Parse(effectElement.Attribute("endIntensity").Value) * 2.55);
 		} // Parse
-
-		/// <summary>
-		/// Test whether the main characteristics are equal. Ignores color and processing flag.
-		/// </summary>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <returns></returns>
-		public static bool operator ==(LorBaseEffect x, LorBaseEffect y)
-		{
-			return ((x.StartTimeMs == y.StartTimeMs) &&
-					(x.EndTimeMs == y.EndTimeMs) && 
-					(x.RampDown == y.RampDown) && 
-					(x.RampUp == y.RampUp));
-		} // operator ==
-
-		/// <summary>
-		/// Test whether the main characteristics are NOT equal. Ignores color and processing flag.
-		/// </summary>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <returns></returns>
-		public static bool operator !=(LorBaseEffect x, LorBaseEffect y)
-		{
-			return !(x == y);
-		} // operator !=
 	} // LorBaseEffect
 } // VixenModules.SequenceType.LightOrama

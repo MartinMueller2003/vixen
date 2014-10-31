@@ -230,7 +230,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		private void createMapping()
 		{
-			UInt64 mappingCount = 0;
+			int mappingCount = 0;
 			do
 			{
 				// ask if we should map elements

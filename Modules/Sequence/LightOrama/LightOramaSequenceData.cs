@@ -364,81 +364,18 @@ namespace VixenModules.SequenceType.LightOrama
 		/// Map the leaf objects to Vixen elements of the same name
 		/// </summary>
 		/// <param name="lorObject"></param>
-		public UInt64 addLorObjectToMap(ILorObject lorObject)
+		public int addLorObjectToMap(ILorObject lorObject)
 		{
-			UInt64 response = 0;
-			ElementNode element = null;
+			int response = 0;
 
 			// v3Destination
-			// does this object have any children?
-			if ((0 != lorObject.Children.Count) && (lorObject.GetType() != typeof(LorRgbChannel)))
+			// process any children the node may have
+			foreach (UInt64 childIndex in lorObject.Children)
 			{
-				// process any children the node may have
-				foreach (UInt64 childIndex in lorObject.Children)
-				{
-					response += addLorObjectToMap(SequenceObjects[childIndex]);
-				} // end process the children
-			}
-			// does this object exist in the Vixen Element list?
-			else if (null != (element = VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name)))
-			{
-				// is this an RGB channel?
-				if (lorObject.GetType() == typeof(LorRgbChannel))
-				{
-					// process the children
-					foreach (UInt64 childIndex in lorObject.Children)
-					{
-						response++;
+				response += addLorObjectToMap(SequenceObjects[childIndex]);
+			} // end process the children
 
-						LorChannel rgbChild = SequenceObjects[childIndex] as LorChannel;
-						LorChannelMapping mapping = Mappings.FirstOrDefault(x => x.ChannelName == rgbChild.Name);
-						if (null == mapping)
-						{
-							mapping = new LorChannelMapping(rgbChild.Name,
-															rgbChild.Color,
-															rgbChild.Index,
-															element.Id,
-															rgbChild.Color,
-															true);
-							Mappings.Add(mapping);
-						}
-						else
-						{
-							mapping.DestinationColor = rgbChild.Color;
-							mapping.ColorMixing = true;
-							mapping.ElementNodeId = element.Id;
-						}
-					} // end RGB channels
-				} // end RGB leaf
-				else if ((lorObject.GetType() == typeof(LorChannel) && (UInt64.MaxValue == ((LorChannel)lorObject).RgbChannel)))
-				{
-					response++;
-
-					// get the mapping entry for this element
-					LorChannelMapping mapping = Mappings.FirstOrDefault(x => x.ChannelName == lorObject.Name);
-					if (null != mapping)
-					{
-						mapping.DestinationColor = (lorObject as LorChannel).Color;
-						mapping.ColorMixing = false;
-						mapping.ElementNodeId = element.Id;
-					} // end map exists
-					else
-					{
-						// create a mapping for this channel
-						mapping = new LorChannelMapping((lorObject as LorChannel).Name,
-														(lorObject as LorChannel).Color,
-														(lorObject as LorChannel).Index,
-														element.Id,
-														(lorObject as LorChannel).Color,
-														false);
-						Mappings.Add(mapping);
-					}
-				} // end there is an element for this lor channel
-			} // end matching element exists
-			else
-			{
-				// LOR object does not exist in the V3 Element table
-			}
+			response += lorObject.AddToMappings(this);
 
 			return response;
 		} // addLorObjectToMap
