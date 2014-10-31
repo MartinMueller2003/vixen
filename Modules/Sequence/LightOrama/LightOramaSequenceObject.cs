@@ -21,11 +21,12 @@ namespace VixenModules.SequenceType.LightOrama
 	{
 		UInt64 Index { get; }
 		string Name { get; set; }
+		Guid ElementId { get; }
 		List<UInt64> Children { get; }
 		List<UInt64> Parents { get; }
 
 		void Parse(XElement element);
-
+		void CreateVixenElement( LightOramaSequenceData dataSet);
 	} // ILorObject
 
 } // VixenModules.SequenceType.LightOrama

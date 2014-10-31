@@ -318,9 +318,10 @@ namespace VixenModules.SequenceType.LightOrama
 				{
 					StaticModuleData.LightOramaMappings.Remove(lightOramaToVixen3MappingTextBox.Text);
 
-					// rediplay the maps
+					// redisplay the maps
 					LoadMaps();
-				}
+					lightOramaToVixen3MappingListBox_MouseClick(sender, e as MouseEventArgs);
+				} // end delete existing conversion.
 			}
 			else
 			{

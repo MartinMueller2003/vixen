@@ -5,8 +5,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Linq;
+using Vixen.Data.Flow;
+using Vixen.Module.OutputFilter;
+using Vixen.Module.Property;
+using Vixen.Rule;
 using Vixen.Services;
 using Vixen.Sys;
+using VixenModules.OutputFilter.ColorBreakdown;
+using VixenModules.Property.Color;
 using NLog;
 
 namespace VixenModules.SequenceType.LightOrama
@@ -344,68 +350,15 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="lorObject"></param>
 		public void addLorObjectToElementList(ILorObject lorObject)
 		{
-			// does this object have any children?
-			if ((0 != lorObject.Children.Count) && (lorObject.GetType() != typeof(LorRgbChannel)))
+			// create a vixen element for this lor object
+			lorObject.CreateVixenElement(this);
+
+			// process any children the node may have
+			foreach (UInt64 childIndex in lorObject.Children)
 			{
-				// process any children the node may have
-				foreach (UInt64 childIndex in lorObject.Children)
-				{
-					addLorObjectToElementList(SequenceObjects[childIndex]);
-				} // end process the children
-			}
-			// does this object exist in the Vixen Element list?
-			else if (null == VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name))
-			{
-				CreateElementNodeAndParentTree(lorObject);
-			}
+				addLorObjectToElementList(SequenceObjects[childIndex]);
+			} // end process the children
 		} // addLorObjectToElementList
-
-		/// <summary>
-		/// Create the parent tree for this node. Node MUST be a leaf node
-		/// </summary>
-		/// <param name="node"></param>
-		/// <returns>The element node that was created</returns>
-		private ElementNode CreateElementNodeAndParentTree(ILorObject lorObject)
-		{
-			// find the Vixen Element associated with this LOR Channel
-			ElementNode response = VixenSystem.Nodes.GetAllNodes().FirstOrDefault(x => x.Name == lorObject.Name);
-
-			// does this lor object already exist in the Vixen tree?
-			if (null == response)
-			{
-				// no it does not exist. Create its parents and then create it
-				foreach (UInt64 parentId in lorObject.Parents)
-				{
-					// get the parent object
-					ILorObject parentObject = SequenceObjects[parentId];
-
-					// get the element for this parent
-					ElementNode parentElement = CreateElementNodeAndParentTree(parentObject);
-
-					// have we already created our element?
-					if (null == response)
-					{
-						// create a new node and bind it to the parent
-						response = ElementNodeService.Instance.CreateSingle(parentElement, lorObject.Name);
-					}
-					else
-					{
-						// bind the parent node to the existing child node
-						VixenSystem.Nodes.AddChildToParent(response, parentElement);
-					}
-				} // end process parents
-
-				// if there were no parents, then just make a top level node
-				if (null == response)
-				{
-					// create a new node and bind it to the parent
-					response = ElementNodeService.Instance.CreateSingle(null, lorObject.Name);
-				} // end no parents
-			} // end this Vixen node did not exist
-
-			// return the node we created
-			return response;
-		} // CreateElementNodeParentTree
 
 		/// <summary>
 		/// Map the leaf objects to Vixen elements of the same name
@@ -457,7 +410,7 @@ namespace VixenModules.SequenceType.LightOrama
 						}
 					} // end RGB channels
 				} // end RGB leaf
-				else
+				else if ((lorObject.GetType() == typeof(LorChannel) && (UInt64.MaxValue == ((LorChannel)lorObject).RgbChannel)))
 				{
 					response++;
 

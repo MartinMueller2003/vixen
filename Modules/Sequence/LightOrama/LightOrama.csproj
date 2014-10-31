@@ -211,10 +211,23 @@
       <Name>Curves</Name>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\..\PostFilter\ColorBreakdown\ColorBreakdown.csproj">
+      <Project>{ed386f64-644a-439d-ab12-96e341f20edf}</Project>
+      <Name>ColorBreakdown</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Property\Color\Color.csproj">
+      <Project>{73068a83-b3b7-4a2c-923d-71c7886cd5e3}</Project>
+      <Name>Color</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Timed\Timed.csproj">
       <Project>{45e1228a-f714-41d5-bb9b-a776f2b23143}</Project>
       <Name>Timed</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

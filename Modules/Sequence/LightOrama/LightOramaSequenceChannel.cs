@@ -6,11 +6,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Linq;
+using Vixen.Data.Flow;
 using Vixen.Module.Effect;
+using Vixen.Module.OutputFilter;
+using Vixen.Module.Property;
+using Vixen.Rule;
 using Vixen.Services;
 using Vixen.Sys;
 using VixenModules.App.Curves;
 using VixenModules.App.ColorGradients;
+using VixenModules.OutputFilter.ColorBreakdown;
+using VixenModules.Property.Color;
 using VixenModules.Sequence.Timed;
 using ZedGraph;
 
@@ -29,6 +35,7 @@ namespace VixenModules.SequenceType.LightOrama
 		public List<UInt64> Children { get; private set; }
 		public List<UInt64> Parents { get; private set; }
 		public List<ILorEffect> Effects { get; private set; }
+		public Guid ElementId { get; private set; }
 
 		/// <summary>
 		/// Set up defaults
@@ -43,6 +50,7 @@ namespace VixenModules.SequenceType.LightOrama
 			Effects = new List<ILorEffect>();
 			Children = new List<UInt64>();
 			Parents = new List<UInt64>();
+			ElementId = Guid.Empty;
 			Parse(element);
 		} // LorChannel
 
@@ -107,5 +115,66 @@ namespace VixenModules.SequenceType.LightOrama
 				} // elementName
 			} // end process each element catagory at the sequence level
 		} // Parse
+
+		/// <summary>
+		/// create this element in a tree of elements. Create any parents as needed
+		/// </summary>
+		/// <param name="sequence"></param>
+		public void CreateVixenElement(LightOramaSequenceData sequence)
+		{
+			do
+			{
+				// do we already have an element ID or we are an RGB channel?
+				if( (Guid.Empty != ElementId) || (UInt64.MaxValue != RgbChannel) )
+				{
+					// just go away
+					break;
+				} // end filter creation of element
+
+				// create an element for this lor object
+				ElementNode element = ElementNodeService.Instance.CreateSingle(null, Name);
+				ElementId = element.Id;
+
+				// Bind to the parent nodes.
+				foreach (UInt64 parentId in Parents)
+				{
+					ILorObject parentObject = sequence.SequenceObjects[parentId];
+					if (Guid.Empty == parentObject.ElementId)
+					{
+						parentObject.CreateVixenElement(sequence);
+					} // end create parent object
+
+					// bind the parent to this node
+					ElementNode parentElement = VixenSystem.Nodes.GetElementNode(parentObject.ElementId);
+					VixenSystem.Nodes.AddChildToParent(element, parentElement);
+				} // end bind to parents
+
+				// check to see if we should be at the root level?
+				if (0 != Parents.Count)
+				{
+					VixenSystem.Nodes.RemoveNode(element, null, true);
+				}
+
+				ColorModule colorProperty = element.Properties.Add(ColorDescriptor.ModuleId) as ColorModule;
+				colorProperty.ColorType = ElementColorType.SingleColor;
+				colorProperty.SingleColor = Color;
+				colorProperty.ColorSetName = String.Empty;
+
+				ColorBreakdownModule breakdown = ApplicationServices.Get<IOutputFilterModuleInstance>(ColorBreakdownDescriptor.ModuleId) as ColorBreakdownModule;
+				VixenSystem.DataFlow.SetComponentSource(breakdown, new DataFlowComponentReference(VixenSystem.DataFlow.GetComponent(element.Element.Id), 0));
+				VixenSystem.Filters.AddFilter(breakdown);
+
+				List<ColorBreakdownItem> newBreakdownItems = new List<ColorBreakdownItem>();
+
+				ColorBreakdownItem cbi = new ColorBreakdownItem();
+				cbi.Color = Color; ;
+				cbi.Name = Color.Name;
+				newBreakdownItems.Add(cbi);
+
+				breakdown.MixColors = false;
+				breakdown.BreakdownItems = newBreakdownItems;
+
+			} while (false);
+		} // CreateVixenElement
 	} // LorChannel
 } // VixenModules.SequenceType.LightOrama
