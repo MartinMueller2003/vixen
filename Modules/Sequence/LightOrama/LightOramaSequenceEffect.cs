@@ -25,16 +25,14 @@ namespace VixenModules.SequenceType.LightOrama
 		UInt64 StartIntensity { get; }
 		UInt64 EndIntensity { get; }
 		Color Color { get; set; }
-		bool HasBeenProcessed { get; }
 		bool RampUp { get; set; }
 		bool RampDown { get; set; }
-		ILorEffect CombineEffects(List<ILorEffect> list);
 
 		/// <summary>
 		/// translate the effect into a vixen effect and attach it to the element
 		/// </summary>
 		/// <param name="element"></param>
-		List<EffectNode> translateEffect(ElementNode element, Color color);
+		EffectNode translateEffect(ElementNode element, Color color);
 
 	} // ILorEffect
 
@@ -51,7 +49,6 @@ namespace VixenModules.SequenceType.LightOrama
 		public UInt64 StartTimeMs { get; set; }
 		public UInt64 EndTimeMs { get; set; }
 		public Color Color { get; set; }
-		public bool HasBeenProcessed { get; set; }
 		public bool RampUp { get; set; }
 		public bool RampDown { get; set; }
 
@@ -83,7 +80,6 @@ namespace VixenModules.SequenceType.LightOrama
 			StartTimeMs = 0;
 			EndTimeMs = 0;
 			Color = Color.Empty;
-			HasBeenProcessed = false;
 			RampUp = false;
 			RampDown = false;
 		} // LorBaseEffect

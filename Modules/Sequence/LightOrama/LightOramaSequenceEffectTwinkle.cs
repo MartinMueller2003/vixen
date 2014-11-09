@@ -32,9 +32,9 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="element"></param>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		public List<EffectNode> translateEffect(ElementNode element, Color color)
+		public EffectNode translateEffect(ElementNode element, Color color)
 		{
-			List<EffectNode> response = new List<EffectNode>();
+			EffectNode response = null;
 			// min time interval in ms
 			const UInt64 MIN_TIME_INTERVAL = 50;
 			const UInt64 TWINKLEPERIOD = 400;
@@ -60,7 +60,7 @@ namespace VixenModules.SequenceType.LightOrama
 					byte blue = Convert.ToByte(Math.Min(Byte.MaxValue, (Convert.ToUInt64(color.B) * Convert.ToUInt64(random.Next(Byte.MaxValue)) * Intensity) / (Byte.MaxValue * Byte.MaxValue)));
 					color = Color.FromArgb(255, red, green, blue);
 
-					response.Add(GenerateSetLevelEffect(element, color, effectLenMs + StartTimeMs, TWINKLEPERIOD, Intensity));
+					// response.Add(GenerateSetLevelEffect(element, color, effectLenMs + StartTimeMs, TWINKLEPERIOD, Intensity));
 
 					nextTwinkle--;
 					if (nextTwinkle <= 0)
@@ -84,7 +84,7 @@ namespace VixenModules.SequenceType.LightOrama
 					byte blue = Convert.ToByte(Math.Min(Byte.MaxValue, (Convert.ToUInt64(color.B) * Convert.ToUInt64(random.Next(Byte.MaxValue)) * Intensity) / (Byte.MaxValue * Byte.MaxValue)));
 					color = Color.FromArgb(255, red, green, blue);
 
-					response.Add(GenerateSetLevelEffect(element, color, i + StartTimeMs, TWINKLEPERIOD, Intensity));
+					// response.Add(GenerateSetLevelEffect(element, color, i + StartTimeMs, TWINKLEPERIOD, Intensity));
 
 					nextTwinkle--;
 					if (nextTwinkle <= 0)
@@ -97,62 +97,6 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return response;
 		} // translateEffect
-
-		/// <summary>
-		/// Combine effects from multiple channels for the same time frame into a single effect
-		/// </summary>
-		/// <param name="effectList"></param>
-		public ILorEffect CombineEffects(List<ILorEffect> effectList)
-		{
-			LorEffectTwinkle response = new LorEffectTwinkle();
-
-			response.Color = Color.White;
-			response.Intensity = 0;
-			UInt64 red = 0;
-			UInt64 green = 0;
-			UInt64 blue = 0;
-
-			// process the input colors bound to this output channel
-			foreach (LorEffectTwinkle effect in effectList)
-			{
-				// make sure the intensity is valid.
-				if (0 == effect.Intensity && 0 == effect.StartIntensity && 0 == effect.EndIntensity)
-				{
-					effect.Intensity = Byte.MaxValue;
-				}
-				response.Intensity = Math.Max(response.Intensity, effect.Intensity);
-				response.StartIntensity = Math.Max(response.StartIntensity, effect.StartIntensity);
-				response.EndIntensity = Math.Max(response.EndIntensity, effect.EndIntensity);
-				response.StartTimeMs = Math.Max(response.StartTimeMs, effect.StartTimeMs);
-				response.EndTimeMs = Math.Max(response.EndTimeMs, effect.EndTimeMs);
-				effect.HasBeenProcessed = true;
-
-				red = Math.Max(red, (effect.Color.R * Math.Max(effect.EndIntensity, Math.Max(effect.Intensity, effect.StartIntensity))));
-				green = Math.Max(green, (effect.Color.G * Math.Max(effect.EndIntensity, Math.Max(effect.Intensity, effect.StartIntensity))));
-				blue = Math.Max(blue, (effect.Color.B * Math.Max(effect.EndIntensity, Math.Max(effect.Intensity, effect.StartIntensity))));
-
-			} // end process each LightOrama effect
-
-			// get the max intensity for this LightOrama channel set
-			UInt64 maxIntensity = Math.Max(red, Math.Max(green, blue));
-
-			// Scale the color to full intensity and let the intensity value attenuate it.
-			if (0 < maxIntensity)
-			{
-				double multplier = Convert.ToDouble(byte.MaxValue) / Convert.ToDouble(maxIntensity);
-
-				// adjust the colors back down to a valid range
-				red = Math.Min(((UInt64)255), Convert.ToUInt64(Convert.ToDouble(red) * multplier));
-				green = Math.Min(((UInt64)255), Convert.ToUInt64(Convert.ToDouble(green) * multplier));
-				blue = Math.Min(((UInt64)255), Convert.ToUInt64(Convert.ToDouble(blue) * multplier));
-			} // do we have any remaining intensity?
-
-			// set the final color
-			response.Color = Color.FromArgb(Convert.ToInt32(red), Convert.ToInt32(green), Convert.ToInt32(blue));
-
-			return response;
-		} // CombineEffects
-
 
 		/// <summary>
 		/// Add a constantly increasing / deacreasing ramp

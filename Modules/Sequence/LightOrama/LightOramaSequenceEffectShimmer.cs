@@ -32,21 +32,10 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="element"></param>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		public List<EffectNode> translateEffect(ElementNode element, Color color)
+		public EffectNode translateEffect(ElementNode element, Color color)
 		{
 			Logging.Error("LOR translateEffect. Unsupported effect type 'shimmer'. Ignoring effect");
-			return new List<EffectNode>(); ;
+			return null;
 		} // translateEffect
-
-		/// <summary>
-		/// Combine effects from multiple channels for the same time frame into a single effect
-		/// </summary>
-		/// <param name="effectList"></param>
-		public ILorEffect CombineEffects(List<ILorEffect> effectList)
-		{
-			LorEffectShimmer response = new LorEffectShimmer();
-			Logging.Error("LOR CombineEffects. Unsupported effect type 'twinkle'. Ignoring effect");
-			return response;
-		} // CombineEffects
 	} // LorEffectShimmer
 } // VixenModules.SequenceType.LightOrama
