@@ -34,6 +34,13 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="element"></param>
 		EffectNode translateEffect(ElementNode element, Color color);
 
+		/// <summary>
+		/// Get the intensity for this effect at the specified time
+		/// </summary>
+		/// <param name="time">Time offset in MS from start of sequence</param>
+		/// <returns>The intensity at the specified time</returns>
+		UInt64 getIntensityAtTime(UInt64 time);
+
 	} // ILorEffect
 
 	/// <summary>

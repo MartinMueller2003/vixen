@@ -31,7 +31,7 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			RampUp = EndIntensity > StartIntensity;
 			RampDown = EndIntensity < StartIntensity;
-		} // translateEffect
+		} // setRamps
 
 		/// <summary>
 		/// Translate the LOR effect into a V3 effect
@@ -98,5 +98,39 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return Convert.ToDouble(value) / curveDivisor;
 		} // end getY
+
+		/// <summary>
+		/// Get the intensity for this effect at the specified time
+		/// </summary>
+		/// <param name="time">Time offset in MS from start of sequence</param>
+		/// <returns>The intensity at the specified time</returns>
+		public UInt64 getIntensityAtTime(UInt64 time)
+		{
+			UInt64 response = 0;
+
+			do
+			{
+				// is the desired time within our time frame?
+				if ((time < StartTimeMs) || (time > EndTimeMs))
+				{
+					// we have nothing to contribute
+					break;
+				} // not for us
+
+				// return our intensity
+				// is this a constant pulse?
+				if (0 < Intensity)
+				{
+					response = StartIntensity = Intensity;
+				}
+				// is this a constant pulse?
+				else if (EndIntensity == StartIntensity)
+				{
+					response = StartIntensity;
+				}
+			} while (false);
+
+			return response;
+		} // getIntensityAtTime
 	} // LorEffectIntensity
 } // VixenModules.SequenceType.LightOrama

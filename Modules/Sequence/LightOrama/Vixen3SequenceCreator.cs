@@ -100,8 +100,11 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			int errorCount = 0;
 
+			// list of parent elements. Used by the consolidation functions
+			Dictionary<string, List<EffectNode>> listOfEffectsForAllElements = new Dictionary<string, List<EffectNode>>();
+
 			// get a list of unique destinations
-			IEnumerable<LorChannelMapping> elementMappings = m_mappings.Where(x => x.ElementNodeId != Guid.Empty).GroupBy(x => x.ElementNodeId).Select(g => g.First()).ToList();
+			List<LorChannelMapping> elementMappings = m_mappings.Where(x => x.ElementNodeId != Guid.Empty).GroupBy(x => x.ElementNodeId).Select(g => g.First()).ToList();
 
 			m_conversionProgressBar.SetupProgressBar(0, elementMappings.Count());
 
@@ -111,68 +114,135 @@ namespace VixenModules.SequenceType.LightOrama
 				m_conversionProgressBar.UpdateProgressBar(currentMappingNum++);
 				Application.DoEvents();
 
-				ElementNode vixElement = VixenSystem.Nodes.GetElementNode(elementMapping.ElementNodeId);
-				if (null == vixElement)
+				ElementNode vixenElement = VixenSystem.Nodes.GetElementNode(elementMapping.ElementNodeId);
+				if (null == vixenElement)
 				{
 					Logging.Error("Vixen Element " + elementMapping.ElementNodeId + " could not be located for mapping " + elementMapping.ChannelName);
 					errorCount++;
 					continue;
 				}
 
+				string parentName = "Orphan";
+
+				// does this element have a parent?
+				if (0 != vixenElement.Parents.Count())
+				{
+					ElementNode firstParent = vixenElement.Parents.First();
+					parentName = firstParent.Id.ToString();
+				} // end element has a parent
+
+				// is this parent already in our list of parents?
+				if (false == listOfEffectsForAllElements.ContainsKey(parentName))
+				{
+					// add this parent to our list of parents
+					listOfEffectsForAllElements.Add(parentName, new List<EffectNode>());
+				} // end new parent
+
 				// get a list of the channels mapped to this element
 				IEnumerable<LorChannelMapping> channelMappings = m_mappings.Where(x => x.ElementNodeId == elementMapping.ElementNodeId).ToList();
 
 				List<EffectNode> listOfEffects = new List<EffectNode>();
 
-				ProcessEffects(vixElement, channelMappings, ref listOfEffects);
-
-				if ("String 1 3" == vixElement.Name)
-				{
-					listOfEffects = listOfEffects.OrderBy(x => x.StartTime).ToList();
-				}
-
+				ProcessEffects(vixenElement, channelMappings, ref listOfEffects);
 
 				// try to consolidate some of the effects
 				PostProcessListOfEffects(listOfEffects, elementMapping.ColorMixing);
 
-				// update the sequence with these effects
-				Sequence.InsertData(listOfEffects);
+				// add the result to the running list of effecat
+				listOfEffectsForAllElements[parentName].AddRange(listOfEffects);
 			} // end process each mapped element
+
+			// parse the effects and combine as many as possible to a parrent element
+			// CombineElementsToParentElements(listOfEffectsForAllElements);
+
+			// update the sequence with these effects
+			foreach (var currentParent in listOfEffectsForAllElements)
+			{
+				// add the effects for this parent
+				Sequence.InsertData(currentParent.Value);
+			} // end process parents
 		} // importSequenceData
 
 		/// <summary>
-		/// Examine the effects on channels and convert them to vixen effects.
+		/// Examine the individual elements and combine those time slices that have identical values for all child elements to a single effect on a parent element
+		/// </summary>
+		/// <param name="listOfEffectsForAllElements"></param>
+		/// <param name="vixenElementParentList"></param>
+		private void CombineElementsToParentElements(Dictionary<string, List<EffectNode>> listOfEffectsForAllElements)
+		{
+			// process each potential parent
+			foreach (var currentParent in listOfEffectsForAllElements)
+			{
+				// skip the elements that have no parents
+				if ("Orphan" == currentParent.Key)
+				{
+					// just move on
+					continue;
+				} //  end skip effects that do not have a parent effect
+
+				// sort the elements for this parent by start time
+				List<EffectNode> timeSortedWorkList = currentParent.Value.OrderBy(x => x.StartTime).ToList();
+				while (0 != timeSortedWorkList.Count)
+				{
+					List<EffectNode> nodesInCurrentEffect = new List<EffectNode>();
+					EffectNode firstEffect = timeSortedWorkList.First();
+					TimeSpan effectStartTime = firstEffect.StartTime;
+					TimeSpan effectEndTime = firstEffect.EndTime;
+					Type effectType = firstEffect.Effect.GetType();
+					List<ElementNode> targetNodeList = firstEffect.Effect.TargetNodes.ToList();
+
+					// Are there enough effects to make combining them usefull?
+					List<EffectNode> effectsInTimeFrame = timeSortedWorkList.Where(x => (x.StartTime == effectStartTime) && (x.EndTime == effectEndTime) && x.Effect.GetType() == effectType).ToList();
+					timeSortedWorkList.Remove(firstEffect);
+					if (2 > effectsInTimeFrame.Count())
+					{
+						// nope. Move on
+						continue;
+					} // end end not enough effects to process
+
+					// at this point we have a bunch of similar effects that start and end at the same time. Combine them into a single effect
+
+				} // end process the time sorted list
+
+			} // end process a parent
+		} // CombineToParentElements
+
+		/// <summary>
+		/// Examine the effects on channels and convert them to vixen effects. This results in an unoptimized list of bulk events.
 		/// </summary>
 		/// <param name="vixElement"></param>
 		/// <param name="channelMappings"></param>
 		/// <param name="listOfEffects"></param>
 		public void ProcessEffects(ElementNode vixElement, IEnumerable<LorChannelMapping> channelMappings, ref List<EffectNode> listOfEffects)
 		{
-			// process the effects for each child
+			// process the effects for each contributing channel
 			foreach (LorChannelMapping sourceChannelMapping in channelMappings)
 			{
+				// is this channel present in the list of channel numbers?
 				if (false == m_parsedLightOramaSequence.SequenceObjects.ContainsKey(sourceChannelMapping.ChannelNumber))
 				{
 					continue;
 				}
 
+				// get the LOR channel
 				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[sourceChannelMapping.ChannelNumber] as LorChannel;
-
 				if (null == lorChannel)
 				{
+					// failed to get the channel data (can happen when using a profile)
 					continue;
 				}
 
-				foreach (ILorEffect sampleEffect in lorChannel.Effects)
+				// process each effect for this contributing channel
+				foreach (ILorEffect currentLorChannelEffect in lorChannel.Effects)
 				{
 					EffectNode effect = null;
-					if (null != (effect = sampleEffect.translateEffect(vixElement, sourceChannelMapping.DestinationColor)))
+					if (null != (effect = currentLorChannelEffect.translateEffect(vixElement, sourceChannelMapping.DestinationColor)))
 					{
 						listOfEffects.Add(effect);
 					}
 				} // end list of effects
 			} // end for each child 
-		} // ConsolidateEffects
+		} // ProcessEffects
 
 		/// <summary>
 		/// Combine the individuale effects assigned to the vixen element to reduce the number of descrete effects.
@@ -181,26 +251,224 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="colorMixing"></param>
 		private void PostProcessListOfEffects(List<EffectNode> listOfEffects, bool colorMixing)
 		{
-			// combine any contiguous effects
-			PostProcessListOfContiguousEffects(listOfEffects);
-
 			// this must be done after the combination of contiguous effects into a single effect
 			if (true == colorMixing)
 			{
 				// combine multiple concurrent effects into a single effect
-				PostProcessPulseSetLevelConcurrentEffects(listOfEffects);
+				PostProcessConcurrentEffects(listOfEffects);
 			} // end mix colors as needed
+			else
+			{
+				// combine any contiguous effects
+				PostProcessContiguousMixedColorEffects(listOfEffects);
+			}
 		} // PostProcessListOfEffects
+
+		/// <summary>
+		/// Find effects related by time and combine them into a single effect
+		/// </summary>
+		/// <param name="listOfEffects"></param>
+		private void PostProcessContiguousMixedColorEffects(List<EffectNode> listOfEffects)
+		{
+			List<EffectNode> timeSortedWorkList = listOfEffects.OrderBy(x => x.StartTime).ToList();
+			while (0 != timeSortedWorkList.Count)
+			{
+				List<EffectNode> nodesInCurrentEffect = new List<EffectNode>();
+				TimeSpan effectStartTime = timeSortedWorkList.First().StartTime;
+				TimeSpan effectEndTime = timeSortedWorkList.First().EndTime;
+
+				// process effects that start within this effect
+				List<EffectNode> effectsInTimeFrame = timeSortedWorkList.Where(x => (x.StartTime <= effectStartTime) && (x.StartTime <= effectEndTime)).ToList();
+				while (0 != effectsInTimeFrame.Count())
+				{
+					// get the next effect to add to the current aggregate effect
+					EffectNode currentEffect = effectsInTimeFrame.First();
+					nodesInCurrentEffect.Add(currentEffect);
+					timeSortedWorkList.Remove(currentEffect);
+
+					// adjust the new end time
+					if (effectEndTime < currentEffect.EndTime)
+					{
+						effectEndTime = currentEffect.EndTime;
+					} // end adjust end time
+
+					// rebuild the list
+					effectsInTimeFrame = timeSortedWorkList.Where(x => (x.StartTime <= effectStartTime) && (x.StartTime <= effectEndTime)).ToList();
+				} // end process current time group
+
+				BuildColorMixingEffect(nodesInCurrentEffect, listOfEffects, effectStartTime, effectEndTime);
+			} // end while there are elements to process loop
+		} // PostProcessContiguousMixedColorEffects
+
+		/// <summary>
+		/// Combine the related effects into a single pulse effect
+		/// </summary>
+		/// <param name="nodesInCurrentEffect"></param>
+		/// <param name="listOfEffects"></param>
+		/// <param name="pulseStartTimeSpan"></param>
+		/// <param name="pulseEndTimeSpan"></param>
+		private void BuildColorMixingEffect(List<EffectNode> nodesInCurrentEffect,
+											List<EffectNode> listOfEffects,
+											TimeSpan pulseStartTimeSpan,
+											TimeSpan pulseEndTimeSpan)
+		{
+			do
+			{
+				// do not touch a singleton
+				if (2 > nodesInCurrentEffect.Count)
+				{
+					// just leave the singleton alone
+					break;
+				} // end check singleton
+
+				// allocate a pulse effect Module
+				IEffectModuleInstance pulseInstance = ApplicationServices.Get<IEffectModuleInstance>(new PulseDescriptor().TypeId);
+				if (null == pulseInstance)
+				{
+					Logging.Error("BuildColorMixingEffect: Could not allocate an instance of IEffectModuleInstance");
+					break;
+				} // end could not allocate a pulse instance
+
+				// Clone() Doesn't work! :(
+				pulseInstance.TargetNodes = nodesInCurrentEffect.First().Effect.TargetNodes.ToArray();
+				pulseInstance.TimeSpan = (pulseEndTimeSpan - pulseStartTimeSpan).Duration();
+				EffectNode newEffectNode;
+				if (null == (newEffectNode = new EffectNode(pulseInstance, pulseStartTimeSpan)))
+				{
+					// could not allocate the structure
+					Logging.Error("BuildColorMixingEffect: Could not allocate an instance of EffectNode");
+					break;
+				} // end could not allocate an effect instance
+
+				PointPairList pointPairList = new PointPairList();
+				Curve newEffectCurve = new Curve(pointPairList);
+				newEffectCurve.Points.Clear();
+				newEffectCurve.Points.Add(new PointPair(0.0, 100.0));
+				newEffectCurve.Points.Add(new PointPair(100.0, 100.0));
+				double durration = (pulseEndTimeSpan - pulseStartTimeSpan).Duration().TotalMilliseconds;
+
+				// create a list of color points for the gradient
+				ColorGradient colorGradient = new ColorGradient();
+				colorGradient.Colors.Clear();
+
+				// process each input effect and remove it from the master lists
+				foreach (EffectNode currentEffectNode in nodesInCurrentEffect)
+				{
+					// get the curve data for this effect
+					Curve currentEffectCurve = currentEffectNode.Effect.ParameterValues[PULSE_CURVE_PARAMETER_INDEX] as Curve;
+					ColorGradient currentEffectColorGradient = currentEffectNode.Effect.ParameterValues[PULSE_COLOR_PARAMETER_INDEX] as ColorGradient;
+
+					// calulate the starting and ending percentage points of this effect with respect to the entire combined effect.
+					double currentEffectStartPercent = Math.Min(100.0, ((currentEffectNode.StartTime - pulseStartTimeSpan).TotalMilliseconds / durration) * 100.0);
+					double currentEffectEndPercent = Math.Min(100.0, ((currentEffectNode.EndTime - pulseStartTimeSpan).TotalMilliseconds / durration) * 100.0);
+					double currentEffectDurrationPercent = currentEffectEndPercent - currentEffectStartPercent;
+
+					// process each point in this effect
+					foreach (PointPair currentPoint in currentEffectCurve.Points)
+					{
+						// get the color and intensity at this point
+						double intensityAtPoint = currentPoint.Y / 100.0;
+						Color colorAtPoint = currentEffectColorGradient.GetColorAt(currentPoint.X);
+						double effectiveLocationOfCurrentPointInPercent = Math.Min(100.0, (currentEffectStartPercent + currentPoint.X));
+
+						double currentEffectIntensityAtPoint = newEffectCurve.GetIntValue(effectiveLocationOfCurrentPointInPercent);
+						Color currentEffectColorAtPoint = currentEffectColorGradient.GetColorAt(effectiveLocationOfCurrentPointInPercent);
+
+						int red = Convert.ToInt32(Math.Min(255.0, Math.Max((colorAtPoint.R * intensityAtPoint), (currentEffectColorAtPoint.R * currentEffectIntensityAtPoint))));
+						int green = Convert.ToInt32(Math.Min(255.0, Math.Max((colorAtPoint.G * intensityAtPoint), (currentEffectColorAtPoint.G * currentEffectIntensityAtPoint))));
+						int blue = Convert.ToInt32(Math.Min(255.0, Math.Max((colorAtPoint.B * intensityAtPoint), (currentEffectColorAtPoint.B * currentEffectIntensityAtPoint))));
+
+					} // end process points for this input effect
+
+					// take this effect out of the master list. It will be replaced with the combined effect;
+					listOfEffects.Remove(currentEffectNode);
+				} // end process each effect node in the input list
+
+				// fill in the pusle parameters
+				newEffectNode.Effect.ParameterValues = new Object[]
+					{
+						// create the parameter values
+						new Curve(pointPairList), new ColorGradient(colorGradient)
+					};
+
+				// Add the result to the output list
+				listOfEffects.Add(newEffectNode);
+
+			} while (false);
+		} // BuildColorMixingEffect
 
 		/// <summary>
 		/// Find concurrent effects where the start and end times align and see if they can be combined
 		/// </summary>
 		/// <param name="listOfEffects"></param>
 		/// <returns>listOfEffects</returns>
-		private void PostProcessPulseSetLevelConcurrentEffects(List<EffectNode> listOfEffects)
+		private void xPostProcessConcurrentEffects(List<EffectNode> listOfEffects)
+		{
+			// this is the end goal. 
+			List<EffectNode> listOfFinishedEffects = new List<EffectNode>();
+
+			// sort the source list
+			listOfEffects = listOfEffects.OrderBy(x => x.StartTime).ToList();
+
+			// find related effects
+			while (0 != listOfEffects.Count())
+			{
+				// set up a working list
+				List<EffectNode> currentListOfEffects = new List<EffectNode>();
+
+				// set up the starting point
+				EffectNode firstEffect = listOfEffects.First();
+				TimeSpan startTime = firstEffect.StartTime;
+				TimeSpan endTime = firstEffect.EndTime + m_maxGapTimeSpan;
+
+				// move the effect to our private list and remove it from the public list
+				currentListOfEffects.Add(firstEffect);
+				listOfEffects.Remove(firstEffect);
+
+				List<EffectNode> listOfEffects_1 = listOfEffects.Where(x => x.StartTime <= endTime).OrderBy(x => x.EndTime).ToList();
+				while (0 != listOfEffects_1.Count())
+				{
+					// adjust the end time and move all of the effects
+					endTime = listOfEffects_1.Last().EndTime + m_maxGapTimeSpan;
+					currentListOfEffects.AddRange(listOfEffects_1);
+					foreach (EffectNode effect in listOfEffects_1)
+					{
+						listOfEffects.Remove(effect);
+					} // end clean listOfEffects
+
+					// refresh the list based on the new end time
+					listOfEffects_1 = listOfEffects.Where(x => x.StartTime <= endTime).OrderBy(x => x.EndTime).ToList();
+				} // end find all of the other effects that start in this same time window
+
+				// the current list of effects is a list of related effects that need to be turned into a single pulse effect
+				currentListOfEffects = currentListOfEffects.OrderBy(x => x.StartTime).ToList();
+
+				// adjust the end time back down to the real time
+				endTime -= m_maxGapTimeSpan;
+
+
+			} // end there are events to process
+
+
+
+			// IEnumerable<EffectNode> xlistOfEffectStartTimes = listOfEffects.GroupBy(x => x.StartTime).Select(g => g.First()).OrderBy(x => x.StartTime).ToList();
+			// IEnumerable<EffectNode> listOfEffectEndTimes = listOfEffects.GroupBy(x => x.StartTime).Select(g => g.First()).OrderBy(x => x.StartTime).ToList();
+
+
+
+
+		} // PostProcessConcurrentEffects
+
+
+		/// <summary>
+		/// Find concurrent effects where the start and end times align and see if they can be combined
+		/// </summary>
+		/// <param name="listOfEffects"></param>
+		/// <returns>listOfEffects</returns>
+		private void PostProcessConcurrentEffects(List<EffectNode> listOfEffects)
 		{
 			// Process each distinct start time
-			IEnumerable<EffectNode> listOfEffectStartTimes = listOfEffects.GroupBy(x => x.StartTime).Select(g => g.First()).ToList();
+			IEnumerable<EffectNode> listOfEffectStartTimes = listOfEffects.GroupBy(x => x.StartTime).Select(g => g.First()).OrderBy(x => x.StartTime).ToList();
 			foreach (EffectNode effectStartTime in listOfEffectStartTimes)
 			{
 				// process each distinct end time that shares this start time
@@ -310,8 +578,8 @@ namespace VixenModules.SequenceType.LightOrama
 					// Clone() Doesn't work! :(
 					pulseInstance.TargetNodes = effectStartTime.Effect.TargetNodes.ToArray();
 					pulseInstance.TimeSpan = (pulseEndTimeSpan - pulseStartTimeSpan).Duration();
-					EffectNode newEeffectNode;
-					if (null == (newEeffectNode = new EffectNode(pulseInstance, pulseStartTimeSpan)))
+					EffectNode newEffectNode;
+					if (null == (newEffectNode = new EffectNode(pulseInstance, pulseStartTimeSpan)))
 					{
 						// could not allocate the structure
 						Logging.Error("PostProcessPulseSetLevelConcurrentEffects: Could not allocate an instance of EffectNode");
@@ -332,16 +600,18 @@ namespace VixenModules.SequenceType.LightOrama
 					cg.Colors.Add(new ColorPoint(endColor, 1.0));
 
 					// fill in the pusle parameters
-					newEeffectNode.Effect.ParameterValues = new Object[]
+					newEffectNode.Effect.ParameterValues = new Object[]
 					{
 						new Curve(pointPairList), new ColorGradient(cg)
 					};
 
 					// Add the result to the output list
-					listOfEffects.Add(newEeffectNode);
+					listOfEffects.Add(newEffectNode);
 				} // end process concurrent effects
 			} // end process common start times
-		} // PostProcessPulseSetLevelConcurrentEffects
+
+			// PostProcessContiguousMixedColorEffects(listOfEffects);
+		} // PostProcessConcurrentEffects
 
 		/// <summary>
 		/// LOR creates many single color set level effects of short durration that are contiguous in time but vary slightly in intensity.
@@ -349,43 +619,42 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		/// <param name="listOfEffects"></param>
 		/// <returns></returns>
-		private void PostProcessListOfContiguousEffects(List<EffectNode> listOfEffects)
+		private void PostProcessContiguousMonoColorEffects(List<EffectNode> listOfEffects)
 		{
 			// generate a list of distinct color set level events
 			IEnumerable<EffectNode> listOfPulseEffects = listOfEffects.Where(x => x.GetType() == typeof(Pulse)).ToList();
-//			IEnumerable<EffectNode> listOfColors = listOfPulseEffects.GroupBy(x => (x.Effect.ParameterValues[SET_LEVEL_COLOR_PARAMETER_INDEX] as ColorGradient).Colors.First()).Select(g => g.First()).ToList();
 			Dictionary<Color, List<EffectNode>> listOfColorLists = new Dictionary<Color, List<EffectNode>>();
 
 			// sort the effects based on the initial color
 			foreach (EffectNode effect in listOfEffects)
 			{
 				ColorGradient colorGradient = effect.Effect.ParameterValues[PULSE_COLOR_PARAMETER_INDEX] as ColorGradient;
-				Color startColor = colorGradient.GetColorAt(0.0);
-				Color endColor = colorGradient.GetColorAt(1.0);
 
 				// is this a mono color effect?
-				if( startColor != endColor )
+				if (1 != colorGradient.Colors.Count)
 				{
 					// only process mono color effects
 					continue;
 				} // end mono color check
 
+				Color color = colorGradient.GetColorAt(0.0);
+
 				// is there a list for this color?
-				if( false == listOfColorLists.ContainsKey(startColor))
+				if (false == listOfColorLists.ContainsKey(color))
 				{
 					// make one
-					listOfColorLists.Add(startColor, new List<EffectNode>());
-				}
+					listOfColorLists.Add(color, new List<EffectNode>());
+				} // end create new color list
 
 				// add this effect node to the proper list
-				listOfColorLists[startColor].Add(effect);
+				listOfColorLists[color].Add(effect);
 			} // end sort into color bins
 
 			// we now have the effects sorted into lists of colors. Now process each color.
-			foreach( var listOfEffectsForThisColor in listOfColorLists)
+			foreach (var listOfEffectsForThisColor in listOfColorLists)
 			{
 				// do we have more than one effect to combine?
-				if( 2 > listOfEffectsForThisColor.Value.Count)
+				if (2 > listOfEffectsForThisColor.Value.Count)
 				{
 					// just ignore this color
 					continue;
@@ -479,8 +748,8 @@ namespace VixenModules.SequenceType.LightOrama
 				// Clone() Doesn't work! :(
 				pulseInstance.TargetNodes = currentEffects.First().Effect.TargetNodes.ToArray();
 				pulseInstance.TimeSpan = (pulseEndTime - pulseStartTime).Duration();
-				EffectNode newEeffectNode = new EffectNode(pulseInstance, pulseStartTime);
-				if (null == newEeffectNode)
+				EffectNode newEffectNode = new EffectNode(pulseInstance, pulseStartTime);
+				if (null == newEffectNode)
 				{
 					// could not allocate the structure
 					Logging.Error("CreatePulseEffect: Could not allocate an instance of EffectNode");
@@ -501,12 +770,12 @@ namespace VixenModules.SequenceType.LightOrama
 						effectNode.StartTime = lastEffectdEndTime + new TimeSpan(1);
 					} // end adjust start time
 
-					double effectStartPercent = Math.Min( 100.0,((effectNode.StartTime - pulseStartTime).TotalMilliseconds / durration) * 100.0);
+					double effectStartPercent = Math.Min(100.0, ((effectNode.StartTime - pulseStartTime).TotalMilliseconds / durration) * 100.0);
 					double effectEndPercent = Math.Min(100.0, ((effectNode.EndTime - pulseStartTime).TotalMilliseconds / durration) * 100.0);
 					double effectDurrationPercent = effectEndPercent - effectStartPercent;
 
 					// process points in the curve
-					Curve curve = effectNode.Effect.ParameterValues[0] as Curve;
+					Curve curve = effectNode.Effect.ParameterValues[PULSE_CURVE_PARAMETER_INDEX] as Curve;
 					foreach (PointPair point in curve.Points)
 					{
 						double start = effectStartPercent + ((point.X / 100) * effectDurrationPercent);
@@ -533,13 +802,13 @@ namespace VixenModules.SequenceType.LightOrama
 				} // end process each set level effect
 
 				// fill in the pusle parameters
-				newEeffectNode.Effect.ParameterValues = new Object[]
+				newEffectNode.Effect.ParameterValues = new Object[]
 				{
 					new Curve(pointPairList), new ColorGradient(color)
 				};
 
 				// Add the result to the output list
-				finalListOfEffects.Add(newEeffectNode);
+				finalListOfEffects.Add(newEffectNode);
 
 			} while (false);
 		} // CreatePulseEffect

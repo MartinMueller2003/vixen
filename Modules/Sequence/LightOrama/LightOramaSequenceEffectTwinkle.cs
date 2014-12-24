@@ -195,5 +195,30 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return Convert.ToDouble(value) / curveDivisor;
 		} // end getY
+
+		/// <summary>
+		/// Get the intensity for this effect at the specified time
+		/// </summary>
+		/// <param name="time">Time offset in MS from start of sequence</param>
+		/// <returns>The intensity at the specified time</returns>
+		public UInt64 getIntensityAtTime(UInt64 time)
+		{
+			UInt64 response = 0;
+
+			do
+			{
+				// is the desired time within our time frame?
+				if ((time < StartTimeMs) || (time > EndTimeMs))
+				{
+					// we have nothing to contribute
+					break;
+				} // not for us
+
+				Logging.Error("LOR translateEffect. Unsupported effect type 'twinkle'. Ignoring effect");
+
+			} while (false);
+
+			return response;
+		} // getIntensityAtTime	
 	} // LorEffectTwinkle
 } // VixenModules.SequenceType.LightOrama
