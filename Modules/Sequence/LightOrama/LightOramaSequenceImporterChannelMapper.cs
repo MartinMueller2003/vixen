@@ -102,7 +102,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// Parse the mapping selection and set up the final mappings
 		/// </summary>
 		/// <param name="node"></param>
-		private void AddVixen3ElementTolightOramaChannel(TreeNode node)
+		private void AddVixen3ElementToLorChannel(TreeNode node)
 		{
 			// this is a bit of a dodgy hack to allow elements to be repeated when dragged to the grid.
 			// we just loop until we've repeated each element X times, in order.
@@ -159,7 +159,7 @@ namespace VixenModules.SequenceType.LightOrama
 				if (node.Nodes.Count == 0)
 				{
 					//We have a node with no children so let's add it to our listviewMapping
-					AddVixen3ElementTolightOramaChannel(node);
+					AddVixen3ElementToLorChannel(node);
 				}
 				else
 				{
@@ -179,7 +179,7 @@ namespace VixenModules.SequenceType.LightOrama
 				}
 				else
 				{
-					AddVixen3ElementTolightOramaChannel(tn);
+					AddVixen3ElementToLorChannel(tn);
 				}
 			}
 		}
@@ -268,6 +268,9 @@ namespace VixenModules.SequenceType.LightOrama
 			PopulateNodeTreeMultiSelect();
 		} // LightOramaSequenceImporterChannelMapper_Load
 
+		/// <summary>
+		/// Itterate the list of LOR items and populate the mapping table.
+		/// </summary>
 		private void CreateLorToV3MappingTable()
 		{
 			//default these to white
@@ -436,6 +439,5 @@ namespace VixenModules.SequenceType.LightOrama
 		} // destinationColorButton_Click
 
 		#endregion
-
 	}
 }
