@@ -135,5 +135,16 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			return 0;
 		} // AddToMappings
+
+		/// <summary>
+		/// Translate the effects for this channel
+		/// </summary>
+		/// <param name="vixElement"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		public IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color)
+		{
+			return new List<EffectNode>();
+		} // TranslateEffects	
 	} // LorCosmicColorDevice
 } // VixenModules.SequenceType.LightOrama

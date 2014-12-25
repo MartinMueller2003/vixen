@@ -143,6 +143,7 @@ namespace VixenModules.SequenceType.LightOrama
 
 				List<EffectNode> listOfEffects = new List<EffectNode>();
 
+				// build the list of effects assigned to this element
 				ProcessEffects(vixenElement, channelMappings, ref listOfEffects);
 
 				// try to consolidate some of the effects
@@ -210,9 +211,9 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <summary>
 		/// Examine the effects on channels and convert them to vixen effects. This results in an unoptimized list of bulk events.
 		/// </summary>
-		/// <param name="vixElement"></param>
-		/// <param name="channelMappings"></param>
-		/// <param name="listOfEffects"></param>
+		/// <param name="vixElement">The V3 Element to which the effects will be attached</param>
+		/// <param name="channelMappings">List of the input channels contributing color to the element</param>
+		/// <param name="listOfEffects">Current list of V3 effects to be assigned to the sequence</param>
 		public void ProcessEffects(ElementNode vixElement, IEnumerable<LorChannelMapping> channelMappings, ref List<EffectNode> listOfEffects)
 		{
 			// process the effects for each contributing channel
@@ -232,15 +233,8 @@ namespace VixenModules.SequenceType.LightOrama
 					continue;
 				}
 
-				// process each effect for this contributing channel
-				foreach (ILorEffect currentLorChannelEffect in lorChannel.Effects)
-				{
-					EffectNode effect = null;
-					if (null != (effect = currentLorChannelEffect.translateEffect(vixElement, sourceChannelMapping.DestinationColor)))
-					{
-						listOfEffects.Add(effect);
-					}
-				} // end list of effects
+				// translate and add to the list of effects
+				listOfEffects.AddRange( lorChannel.TranslateEffects(vixElement, sourceChannelMapping.DestinationColor));
 			} // end for each child 
 		} // ProcessEffects
 

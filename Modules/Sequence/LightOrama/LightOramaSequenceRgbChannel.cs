@@ -192,5 +192,24 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return Children.Count;
 		} // AddToMappings
+
+		/// <summary>
+		/// Translate the effects for this channel
+		/// </summary>
+		/// <param name="vixElement"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		public IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color)
+		{
+			List<EffectNode> listOfEffects = new List<EffectNode>();
+
+			// get the color order from the children
+			foreach (UInt64 childId in Children)
+			{
+				listOfEffects.AddRange(m_sequenceObjects[childId].TranslateEffects(vixElement, (m_sequenceObjects[childId]  as LorChannel).Color));
+			} // end process child colors
+
+			return listOfEffects;
+		} // TranslateEffects	
 	} // LorRgbChannel
 } // VixenModules.SequenceType.LightOrama

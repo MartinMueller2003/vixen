@@ -167,7 +167,7 @@ namespace VixenModules.SequenceType.LightOrama
 				List<ColorBreakdownItem> newBreakdownItems = new List<ColorBreakdownItem>();
 
 				ColorBreakdownItem cbi = new ColorBreakdownItem();
-				cbi.Color = Color; ;
+				cbi.Color = Color;
 				cbi.Name = Color.Name;
 				newBreakdownItems.Add(cbi);
 
@@ -211,5 +211,28 @@ namespace VixenModules.SequenceType.LightOrama
 
 			return response;
 		} // AddToMappings
+
+		/// <summary>
+		/// Translate the effects for this channel
+		/// </summary>
+		/// <param name="vixElement"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		public IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color)
+		{
+			List<EffectNode> listOfEffects = new List<EffectNode>();
+
+			// process each effect for this contributing channel
+			foreach (ILorEffect currentLorChannelEffect in Effects)
+			{
+				EffectNode effect = null;
+				if (null != (effect = currentLorChannelEffect.translateEffect(vixElement, color)))
+				{
+					listOfEffects.Add(effect);
+				}
+			} // end list of effects
+
+			return listOfEffects;
+		} // TranslateEffects
 	} // LorChannel
 } // VixenModules.SequenceType.LightOrama

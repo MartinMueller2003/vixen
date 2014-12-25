@@ -25,9 +25,33 @@ namespace VixenModules.SequenceType.LightOrama
 		List<UInt64> Children { get; }
 		List<UInt64> Parents { get; }
 
+		/// <summary>
+		/// Parse xml
+		/// </summary>
+		/// <param name="channelElement"></param>
 		void Parse(XElement element);
+
+		/// <summary>
+		/// create this element in a tree of elements. Create any parents as needed
+		/// </summary>
+		/// <param name="sequence"></param>
 		void CreateVixenElement(LightOramaSequenceData dataSet);
+
+		/// <summary>
+		/// Update the mappings for this channel
+		/// </summary>
+		/// <param name="dataSet"></param>
+		/// <returns></returns>
 		int AddToMappings(LightOramaSequenceData dataSet);
+
+		/// <summary>
+		/// Translate the effects for this channel
+		/// </summary>
+		/// <param name="vixElement"></param>
+		/// <param name="color"></param>
+		/// <returns>List of Cixen effects for this object</returns>
+		 IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color);
+
 	} // ILorObject
 
 } // VixenModules.SequenceType.LightOrama
