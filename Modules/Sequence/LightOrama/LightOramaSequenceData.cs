@@ -172,16 +172,11 @@ namespace VixenModules.SequenceType.LightOrama
 			// clear out the old mappings
 			Mappings.Clear();
 
-			foreach (LorChannel channel in SequenceObjects.Values.OfType<LorChannel>().ToList())
+			// add all of the objects to the map list
+			foreach (var lorObject in SequenceObjects)
 			{
-				LorChannelMapping mapping = new LorChannelMapping(channel.Name,
-																  channel.Color,
-																  channel.Index,
-																  Guid.Empty,
-																  channel.Color,
-																  false);
-				Mappings.Add(mapping);
-			} // end add leaf channels
+				lorObject.Value.AddToMappings(Mappings);
+			} // end add objects
 		} // CreateMappingList
 
 		/// <summary>
@@ -364,20 +359,10 @@ namespace VixenModules.SequenceType.LightOrama
 		/// Map the leaf objects to Vixen elements of the same name
 		/// </summary>
 		/// <param name="lorObject"></param>
+		/// <returns>Number of channels added</returns>
 		public int addLorObjectToMap(ILorObject lorObject)
 		{
-			int response = 0;
-
-			// v3Destination
-			// process any children the node may have
-			foreach (UInt64 childIndex in lorObject.Children)
-			{
-				response += addLorObjectToMap(SequenceObjects[childIndex]);
-			} // end process the children
-
-			response += lorObject.AddToMappings(this);
-
-			return response;
+			return lorObject.addLorObjectToMap(Mappings);
 		} // addLorObjectToMap
 	} // LightOramaSequenceData
 } // VixenModules.SequenceType.LightOrama

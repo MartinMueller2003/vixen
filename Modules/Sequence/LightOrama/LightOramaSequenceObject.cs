@@ -35,14 +35,21 @@ namespace VixenModules.SequenceType.LightOrama
 		/// create this element in a tree of elements. Create any parents as needed
 		/// </summary>
 		/// <param name="sequence"></param>
-		void CreateVixenElement(LightOramaSequenceData dataSet);
+		void CreateVixenElement(LightOramaSequenceData sequence);
+
+		/// <summary>
+		/// Map the leaf objects to Vixen elements of the same name
+		/// </summary>
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		int addLorObjectToMap(List<LorChannelMapping> mappings);
 
 		/// <summary>
 		/// Update the mappings for this channel
 		/// </summary>
-		/// <param name="dataSet"></param>
-		/// <returns></returns>
-		int AddToMappings(LightOramaSequenceData dataSet);
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		int AddToMappings(List<LorChannelMapping> mappings);
 
 		/// <summary>
 		/// Translate the effects for this channel
@@ -50,7 +57,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// <param name="vixElement"></param>
 		/// <param name="color"></param>
 		/// <returns>List of Cixen effects for this object</returns>
-		 IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color);
+		IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color);
 
 	} // ILorObject
 

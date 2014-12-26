@@ -226,15 +226,15 @@ namespace VixenModules.SequenceType.LightOrama
 				}
 
 				// get the LOR channel
-				LorChannel lorChannel = m_parsedLightOramaSequence.SequenceObjects[sourceChannelMapping.ChannelNumber] as LorChannel;
-				if (null == lorChannel)
+				ILorObject lorObject = m_parsedLightOramaSequence.SequenceObjects[sourceChannelMapping.ChannelNumber];
+				if (null == lorObject)
 				{
 					// failed to get the channel data (can happen when using a profile)
 					continue;
 				}
 
 				// translate and add to the list of effects
-				listOfEffects.AddRange( lorChannel.TranslateEffects(vixElement, sourceChannelMapping.DestinationColor));
+				listOfEffects.AddRange( lorObject.TranslateEffects(vixElement, sourceChannelMapping.DestinationColor));
 			} // end for each child 
 		} // ProcessEffects
 

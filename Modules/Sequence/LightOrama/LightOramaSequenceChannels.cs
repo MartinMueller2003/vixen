@@ -135,7 +135,7 @@ namespace VixenModules.SequenceType.LightOrama
 				foreach( UInt64 index in rgbChannel.Children )
 				{
 					// link the channel to the RGB channel group
-					(m_sequenceObjects[index] as LorChannel).RgbChannel = rgbChannel.Index;
+					(m_sequenceObjects[index] as LorChannel).RgbChannelId = rgbChannel.Index;
 				} // end process member channels
 			} // end post process the rgb channels
 

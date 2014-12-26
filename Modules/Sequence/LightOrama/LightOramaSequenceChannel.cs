@@ -31,11 +31,14 @@ namespace VixenModules.SequenceType.LightOrama
 		public UInt64 Length { get; private set; }
 		public UInt64 Index { get; private set; }
 		public string TypeName { get { return this.GetType().ToString(); } }
-		public UInt64 RgbChannel { get; set; }
+		public UInt64 RgbChannelId { get; set; }
 		public List<UInt64> Children { get; private set; }
 		public List<UInt64> Parents { get; private set; }
 		public List<ILorEffect> Effects { get; private set; }
 		public Guid ElementId { get; private set; }
+
+		// value used to indicate this channel is NOT an RGB channel
+		public bool IsAnRgbChannel { get { return UInt64.MaxValue != RgbChannelId; } }
 
 		/// <summary>
 		/// Set up defaults
@@ -46,7 +49,7 @@ namespace VixenModules.SequenceType.LightOrama
 			Color = Color.Empty;
 			Index = 0;
 			Length = 0;
-			RgbChannel = UInt64.MaxValue;
+			RgbChannelId = UInt64.MaxValue;
 			Effects = new List<ILorEffect>();
 			Children = new List<UInt64>();
 			Parents = new List<UInt64>();
@@ -124,8 +127,8 @@ namespace VixenModules.SequenceType.LightOrama
 		{
 			do
 			{
-				// do we already have an element ID or we are an RGB channel?
-				if ((Guid.Empty != ElementId) || (UInt64.MaxValue != RgbChannel))
+				// do we already have an element ID or are we an RGB channel?
+				if ((Guid.Empty != ElementId) || (true == IsAnRgbChannel))
 				{
 					// just go away
 					break;
@@ -178,35 +181,59 @@ namespace VixenModules.SequenceType.LightOrama
 		} // CreateVixenElement
 
 		/// <summary>
+		/// Map the leaf objects to Vixen elements of the same name
+		/// </summary>
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		public int addLorObjectToMap(List<LorChannelMapping> mappings)
+		{
+			int response = 0;
+
+			// is this an RGB channel?
+			if (false == IsAnRgbChannel)
+			{
+				// nope
+				response += AddToMappings(mappings);
+			} // end channel is NOT in RGB mode
+
+			return response;
+		} // addLorObjectToMap
+
+	
+		/// <summary>
 		/// Update the mappings for this channel
 		/// </summary>
-		/// <param name="dataSet"></param>
-		/// <returns></returns>
-		public int AddToMappings(LightOramaSequenceData sequence)
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		public int AddToMappings(List<LorChannelMapping> mappings)
 		{
 			int response = 0;
 			do
 			{
 				// is this an RGB channel?
-				if( UInt64.MaxValue != RgbChannel)
+				if (true == IsAnRgbChannel)
 				{
 					// ignore the RGB channels
 					break;
 				} // end channel is in RGB mode
 
-				LorChannelMapping mapping = sequence.Mappings.FirstOrDefault(x => x.ChannelName == Name);
+				// get the mapping information for this channel
+				LorChannelMapping mapping = mappings.FirstOrDefault(x => x.ChannelName == Name);
 				if (null == mapping)
 				{
+					// this is a new channel
 					mapping = new LorChannelMapping(Name, Color, Index, ElementId, Color, false);
-					sequence.Mappings.Add(mapping);
+					mappings.Add(mapping);
 				}
 				else
 				{
+					// update the existing information
 					mapping.DestinationColor = Color;
 					mapping.ColorMixing = false;
 					mapping.ElementNodeId = ElementId;
 				}
-				response++;
+
+				response = 1;
 			} while (false);
 
 			return response;

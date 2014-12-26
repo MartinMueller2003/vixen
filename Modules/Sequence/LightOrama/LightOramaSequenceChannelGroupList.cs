@@ -128,11 +128,32 @@ namespace VixenModules.SequenceType.LightOrama
 		} // CreateVixenElement
 
 		/// <summary>
+		/// Map the leaf objects to Vixen elements of the same name
+		/// </summary>
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		public int addLorObjectToMap(List<LorChannelMapping> mappings)
+		{
+			int response = 0;
+
+			// v3Destination
+			// process any children the node may have
+			foreach (UInt64 childIndex in Children)
+			{
+				response += m_sequenceObjects[childIndex].addLorObjectToMap(mappings);
+			} // end process the children
+
+			response += AddToMappings(mappings);
+
+			return response;
+		} // addLorObjectToMap
+
+		/// <summary>
 		/// Update the mappings for this channel
 		/// </summary>
-		/// <param name="dataSet"></param>
-		/// <returns></returns>
-		public int AddToMappings(LightOramaSequenceData sequence)
+		/// <param name="mappings"></param>
+		/// <returns>Number of channels added</returns>
+		public int AddToMappings(List<LorChannelMapping> mappings)
 		{
 			return 0;
 		} // AddToMappings
