@@ -56,6 +56,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		/// <param name="vixElement"></param>
 		/// <param name="color"></param>
+		/// <param name="forcePulseEffect"></param>
 		/// <returns>List of Cixen effects for this object</returns>
 		IEnumerable<EffectNode> TranslateEffects(ElementNode vixElement, System.Drawing.Color color);
 

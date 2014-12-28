@@ -101,7 +101,7 @@ namespace VixenModules.SequenceType.LightOrama
 			int errorCount = 0;
 
 			// list of parent elements. Used by the consolidation functions
-			Dictionary<string, List<EffectNode>> listOfEffectsForAllElements = new Dictionary<string, List<EffectNode>>();
+			List<EffectNode> listOfEffectsForAllElements = new List<EffectNode>();
 
 			// get a list of unique destinations
 			List<LorChannelMapping> elementMappings = m_mappings.Where(x => x.ElementNodeId != Guid.Empty).GroupBy(x => x.ElementNodeId).Select(g => g.First()).ToList();
@@ -122,22 +122,6 @@ namespace VixenModules.SequenceType.LightOrama
 					continue;
 				}
 
-				string parentName = "Orphan";
-
-				// does this element have a parent?
-				if (0 != vixenElement.Parents.Count())
-				{
-					ElementNode firstParent = vixenElement.Parents.First();
-					parentName = firstParent.Id.ToString();
-				} // end element has a parent
-
-				// is this parent already in our list of parents?
-				if (false == listOfEffectsForAllElements.ContainsKey(parentName))
-				{
-					// add this parent to our list of parents
-					listOfEffectsForAllElements.Add(parentName, new List<EffectNode>());
-				} // end new parent
-
 				// get a list of the channels mapped to this element
 				IEnumerable<LorChannelMapping> channelMappings = m_mappings.Where(x => x.ElementNodeId == elementMapping.ElementNodeId).ToList();
 
@@ -147,21 +131,18 @@ namespace VixenModules.SequenceType.LightOrama
 				ProcessEffects(vixenElement, channelMappings, ref listOfEffects);
 
 				// try to consolidate some of the effects
-				PostProcessListOfEffects(listOfEffects, elementMapping.ColorMixing);
+				// PostProcessListOfEffects(listOfEffects, elementMapping.ColorMixing);
 
 				// add the result to the running list of effecat
-				listOfEffectsForAllElements[parentName].AddRange(listOfEffects);
+				listOfEffectsForAllElements.AddRange(listOfEffects);
 			} // end process each mapped element
 
 			// parse the effects and combine as many as possible to a parrent element
 			// CombineElementsToParentElements(listOfEffectsForAllElements);
 
-			// update the sequence with these effects
-			foreach (var currentParent in listOfEffectsForAllElements)
-			{
-				// add the effects for this parent
-				Sequence.InsertData(currentParent.Value);
-			} // end process parents
+			// add the effects for this parent
+			Sequence.InsertData(listOfEffectsForAllElements);
+
 		} // importSequenceData
 
 		/// <summary>
@@ -234,7 +215,7 @@ namespace VixenModules.SequenceType.LightOrama
 				}
 
 				// translate and add to the list of effects
-				listOfEffects.AddRange( lorObject.TranslateEffects(vixElement, sourceChannelMapping.DestinationColor));
+				listOfEffects.AddRange(lorObject.TranslateEffects(vixElement, sourceChannelMapping.DestinationColor));
 			} // end for each child 
 		} // ProcessEffects
 

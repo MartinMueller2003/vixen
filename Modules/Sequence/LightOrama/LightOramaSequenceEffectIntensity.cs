@@ -38,12 +38,11 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		/// <param name="element"></param>
 		/// <param name="color"></param>
+		/// <param name="forcePulseEffect"></param>
 		/// <returns></returns>
-		public EffectNode translateEffect(ElementNode element, Color color)
+		public EffectNode TranslateEffect(ElementNode element, Color color, bool forcePulseEffect)
 		{
 			EffectNode effectNode = null;
-			const double startX = 0.0;
-			const double endX = 100.0;
 
 			do
 			{
@@ -58,11 +57,41 @@ namespace VixenModules.SequenceType.LightOrama
 					Intensity = StartIntensity;
 				}
 
+				setRamps();
+
+				// is this a pulse effect?
+				if (true == RampDown || true == RampUp || true == forcePulseEffect)
+				{
+					effectNode = TranslatePulseEffect(element, color);
+				}
+				else
+				{
+					effectNode = TranslateSetLevelEffect(element, color);
+				}
+			} while (false);
+
+			return effectNode;
+		} // translateEffect
+
+		/// <summary>
+		/// Translate the LOR effect into a V3 effect
+		/// </summary>
+		/// <param name="element"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		private EffectNode TranslatePulseEffect(ElementNode element, Color color)
+		{
+			EffectNode effectNode = null;
+			const double startX = 0.0;
+			const double endX = 100.0;
+
+			do
+			{
 				// allocate the effect Module
 				IEffectModuleInstance pulseInstance = ApplicationServices.Get<IEffectModuleInstance>(new PulseDescriptor().TypeId);
 				if (null == pulseInstance)
 				{
-					Logging.Error("translateEffect: Could not allocate an instance of IEffectModuleInstance");
+					Logging.Error("TranslatePulseEffect: Could not allocate an instance of IEffectModuleInstance");
 					break;
 				}
 
@@ -73,7 +102,7 @@ namespace VixenModules.SequenceType.LightOrama
 				if (null == (effectNode = new EffectNode(pulseInstance, TimeSpan.FromMilliseconds(StartTimeMs))))
 				{
 					// could not allocate the structure
-					Logging.Error("translateEffect: Could not allocate an instance of EffectNode");
+					Logging.Error("TranslatePulseEffect: Could not allocate an instance of EffectNode");
 					break;
 				}
 
@@ -85,7 +114,50 @@ namespace VixenModules.SequenceType.LightOrama
 			} while (false);
 
 			return effectNode;
-		} // translateEffect
+		} // TranslatePulseEffect
+
+		/// <summary>
+		/// Translate the LOR effect into a V3 effect
+		/// </summary>
+		/// <param name="element"></param>
+		/// <param name="color"></param>
+		/// <returns></returns>
+		private EffectNode TranslateSetLevelEffect(ElementNode element, Color color)
+		{
+			EffectNode effectNode = null;
+			IEffectModuleInstance setLevelInstance = null;
+
+			do
+			{
+				setLevelInstance = ApplicationServices.Get<IEffectModuleInstance>(new SetLevelDescriptor().TypeId);
+				if (null == setLevelInstance)
+				{
+					// could not get the structure
+					Logging.Error("TranslateSetLevelEffect: Could not allocate an instance of IEffectModuleInstance");
+					break;
+				}
+
+				// Clone() Doesn't work! :(
+				setLevelInstance.TargetNodes = new ElementNode[] { element };
+
+				// calculate how long the event lasts
+				setLevelInstance.TimeSpan = TimeSpan.FromMilliseconds(EndTimeMs - StartTimeMs);
+
+				// set the event and event starting time
+				if (null == (effectNode = new EffectNode(setLevelInstance, TimeSpan.FromMilliseconds(StartTimeMs))))
+				{
+					// could not allocate the structure
+					Logging.Error("TranslateSetLevelEffect: Could not allocate an instance of EffectNode");
+					break;
+				}
+
+				// set intensity and color
+				effectNode.Effect.ParameterValues = new object[] { (Convert.ToDouble(Intensity) / Convert.ToDouble(byte.MaxValue)), color };
+
+			} while (false);
+
+			return effectNode;
+		} // TranslateSetLevelEffect
 
 		/// <summary>
 		/// Calculate a location on the dimming curve

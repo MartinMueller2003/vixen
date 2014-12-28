@@ -31,8 +31,9 @@ namespace VixenModules.SequenceType.LightOrama
 		/// </summary>
 		/// <param name="element"></param>
 		/// <param name="color"></param>
+		/// <param name="forcePulseEffect"></param>
 		/// <returns></returns>
-		public EffectNode translateEffect(ElementNode element, Color color)
+		public EffectNode TranslateEffect(ElementNode element, Color color, bool forcePulseEffect)
 		{
 			Logging.Error("LOR translateEffect. Unsupported effect type 'shimmer'. Ignoring effect");
 			return null;

@@ -32,7 +32,7 @@ namespace VixenModules.SequenceType.LightOrama
 		/// translate the effect into a vixen effect and attach it to the element
 		/// </summary>
 		/// <param name="element"></param>
-		EffectNode translateEffect(ElementNode element, Color color);
+		EffectNode TranslateEffect(ElementNode element, Color color, bool forcePulseEffect);
 
 		/// <summary>
 		/// Get the intensity for this effect at the specified time

@@ -253,7 +253,7 @@ namespace VixenModules.SequenceType.LightOrama
 			foreach (ILorEffect currentLorChannelEffect in Effects)
 			{
 				EffectNode effect = null;
-				if (null != (effect = currentLorChannelEffect.translateEffect(vixElement, color)))
+				if (null != (effect = currentLorChannelEffect.TranslateEffect(vixElement, color, !IsAnRgbChannel)))
 				{
 					listOfEffects.Add(effect);
 				}
